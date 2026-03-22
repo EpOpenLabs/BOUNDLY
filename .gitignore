@@ -1,0 +1,35 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+debug_db.php
+
+# Laravel Engine Basement - generated files
+/Infrastructure/LaravelEngine/storage/*.key
+/Infrastructure/LaravelEngine/storage/pail
+/Infrastructure/LaravelEngine/storage/logs/*.log
+/Infrastructure/LaravelEngine/storage/framework/cache/
+/Infrastructure/LaravelEngine/storage/framework/sessions/
+/Infrastructure/LaravelEngine/storage/framework/views/
+/Infrastructure/LaravelEngine/bootstrap/cache/*.php
+
+# Bootstrap cache
+/bootstrap/cache/*.php
