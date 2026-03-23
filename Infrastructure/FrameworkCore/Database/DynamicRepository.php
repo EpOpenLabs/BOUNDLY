@@ -6,13 +6,19 @@ use Illuminate\Support\Facades\DB;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Exception;
 
+/**
+ * Advanced Dynamic Repository with:
+ * - Nested relation loading (e.g., ?include=posts.comments.author)
+ * - Cursor-based pagination (scalable for large datasets)
+ * - Extended filter operators (_like, _gt, _lt, _gte, _lte, _not, _in, _null)
+ * - OR filter grouping (?or[name_like]=john&or[email_like]=john)
+ */
 class DynamicRepository
 {
     public function __construct(protected EntityRegistry $registry) {}
 
     /**
-     * Resolves the entity configuration by resource name (e.g., 'users')
-     * or directly by SQL table name (e.g., 'users').
+     * Resolves the entity configuration by resource name or SQL table name.
      */
     protected function resolveConfig(string $resource): array
     {
@@ -22,98 +28,175 @@ class DynamicRepository
         }
 
         if (!$config) {
-            throw new Exception(__('core::messages.resource_not_found', ['resource' => $resource]));
+            throw new Exception(__('core::messages.resource_not_found', ['resource' => $resource]), 404);
         }
 
         return $config;
     }
 
     /**
-     * Returns a prepared DB Query Builder and injects
-     * Multitenant, SoftDelete, and Filter security logic.
+     * Builds a secured query with soft-delete, filters, OR-groups, and multi-tenancy.
      */
     protected function getQuery(string $resource, array $filters = [])
     {
         $config = $this->resolveConfig($resource);
-        $query = DB::table($config['table']);
+        $query  = DB::table($config['table']);
 
-        // Apply Soft Deletes if supported
+        // Apply Soft Deletes
         if ($config['softDelete']) {
-            $query->whereNull('deleted_at');
+            $query->whereNull($config['table'] . '.deleted_at');
         }
 
-        // Apply Dynamic URL Filters (Pro Operator Support)
+        // Multi-Tenancy (scopes to current tenant invisibly)
+        if ($config['tenantAware'] && request()->hasHeader('X-Tenant-ID')) {
+            $query->where($config['tenantColumn'], request()->header('X-Tenant-ID'));
+        }
+
+        // Standard AND filters
         foreach ($filters as $rawField => $value) {
-            if (in_array($rawField, ['page', 'per_page', 'include'])) {
+            if (in_array($rawField, ['page', 'per_page', 'include', 'cursor', 'or', 'sort', 'direction'])) {
                 continue;
             }
-
-            // Operator detection: field_like, field_gt, etc.
-            $field = $rawField;
-            $operator = '=';
-
-            if (str_ends_with($rawField, '_like')) {
-                $field = substr($rawField, 0, -5);
-                $operator = 'like';
-                $value = "%{$value}%";
-            } elseif (str_ends_with($rawField, '_gt')) {
-                $field = substr($rawField, 0, -3);
-                $operator = '>';
-            } elseif (str_ends_with($rawField, '_lt')) {
-                $field = substr($rawField, 0, -3);
-                $operator = '<';
-            } elseif (str_ends_with($rawField, '_gte')) {
-                $field = substr($rawField, 0, -4);
-                $operator = '>=';
-            } elseif (str_ends_with($rawField, '_lte')) {
-                $field = substr($rawField, 0, -4);
-                $operator = '<=';
-            }
-
-            // If column exists, apply filter
-            if (isset($config['columns'][$field]) || $field === $config['primaryKey']) {
-                $query->where($field, $operator, $value);
-            }
+            $this->applyFilter($query, $config, $rawField, $value);
         }
-        
-        // Invisible Multitenant Integration:
-        // Scopes the query to the specific tenant ID
-        if ($config['tenantAware'] && request()->hasHeader('X-Tenant-ID')) {
-             $query->where($config['tenantColumn'], request()->header('X-Tenant-ID'));
+
+        // OR filter groups: ?or[name_like]=john&or[email_like]=john
+        if (!empty($filters['or']) && is_array($filters['or'])) {
+            $query->where(function ($q) use ($config, $filters) {
+                foreach ($filters['or'] as $rawField => $value) {
+                    $this->applyFilter($q, $config, $rawField, $value, 'or');
+                }
+            });
+        }
+
+        // Sorting: ?sort=created_at&direction=desc
+        if (!empty($filters['sort'])) {
+            $sortField = $filters['sort'];
+            if (isset($config['columns'][$sortField]) || $sortField === $config['primaryKey']) {
+                $direction = strtolower($filters['direction'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+                $query->orderBy($config['table'] . '.' . $sortField, $direction);
+            }
+        } else {
+            $query->orderBy($config['table'] . '.' . $config['primaryKey'], 'asc');
         }
 
         return $query;
     }
 
+    /**
+     * Applies a single filter condition to a query.
+     * Supported suffixes: _like, _gt, _lt, _gte, _lte, _not, _in, _null
+     */
+    protected function applyFilter($query, array $config, string $rawField, mixed $value, string $boolean = 'and'): void
+    {
+        $field    = $rawField;
+        $operator = '=';
+
+        $suffixes = [
+            '_like' => ['operator' => 'like', 'transform' => fn($v) => "%{$v}%", 'trim' => 5],
+            '_gt'   => ['operator' => '>',    'transform' => null,                'trim' => 3],
+            '_lt'   => ['operator' => '<',    'transform' => null,                'trim' => 3],
+            '_gte'  => ['operator' => '>=',   'transform' => null,                'trim' => 4],
+            '_lte'  => ['operator' => '<=',   'transform' => null,                'trim' => 4],
+            '_not'  => ['operator' => '!=',   'transform' => null,                'trim' => 4],
+        ];
+
+        foreach ($suffixes as $suffix => $opts) {
+            if (str_ends_with($rawField, $suffix)) {
+                $field    = substr($rawField, 0, -$opts['trim']);
+                $operator = $opts['operator'];
+                $value    = $opts['transform'] ? ($opts['transform'])($value) : $value;
+                break;
+            }
+        }
+
+        // _in: ?ids_in=1,2,3
+        if (str_ends_with($rawField, '_in')) {
+            $field = substr($rawField, 0, -3);
+            if (isset($config['columns'][$field]) || $field === $config['primaryKey']) {
+                $values = is_array($value) ? $value : explode(',', $value);
+                $query->whereIn($field, $values, $boolean);
+            }
+            return;
+        }
+
+        // _null: ?deleted_at_null=1 (check IS NULL / IS NOT NULL)
+        if (str_ends_with($rawField, '_null')) {
+            $field = substr($rawField, 0, -5);
+            if (isset($config['columns'][$field])) {
+                if ($value) {
+                    $query->whereNull($field, $boolean);
+                } else {
+                    $query->whereNotNull($field, $boolean);
+                }
+            }
+            return;
+        }
+
+        if (isset($config['columns'][$field]) || $field === $config['primaryKey']) {
+            $query->where($field, $operator, $value, $boolean);
+        }
+    }
+
+    /**
+     * Standard offset-based paginated list.
+     */
     public function paginate(string $resource, int $perPage = 15, array $includes = [], array $filters = [])
     {
         $paginator = $this->getQuery($resource, $filters)->paginate($perPage);
-        $config = $this->resolveConfig($resource);
+        $config    = $this->resolveConfig($resource);
 
-        // Transform collection to apply relations and filtering
-        $paginator->getCollection()->transform(function($item) use ($config, $includes) {
-            $arrayItem = (array)$item;
-            return (object) $this->applyIncludes($arrayItem, $config, $includes);
+        $paginator->getCollection()->transform(function ($item) use ($config, $includes) {
+            return (object) $this->applyIncludes((array) $item, $config, $includes);
         });
 
         return $paginator;
     }
 
+    /**
+     * Cursor-based pagination: highly efficient for large datasets and infinite scroll.
+     * Accepts ?cursor=<last_id> and returns up to $perPage records after that cursor.
+     */
+    public function cursorPaginate(string $resource, int $perPage = 15, array $includes = [], array $filters = []): array
+    {
+        $config = $this->resolveConfig($resource);
+        $query  = $this->getQuery($resource, $filters);
+        $pk     = $config['primaryKey'];
+        $cursor = request()->query('cursor');
+
+        if ($cursor) {
+            $query->where($config['table'] . '.' . $pk, '>', $cursor);
+        }
+
+        // Fetch one extra record to detect if there is a next page
+        $results = $query->limit($perPage + 1)->get();
+        $hasMore = $results->count() > $perPage;
+        $items   = $results->take($perPage);
+
+        $items = $items->map(fn($item) => $this->applyIncludes((array) $item, $config, $includes));
+
+        return [
+            'data'        => $items->values(),
+            'next_cursor' => $hasMore ? $items->last()->{$pk} ?? null : null,
+            'has_more'    => $hasMore,
+        ];
+    }
+
     public function all(string $resource, array $includes = [], array $filters = [])
     {
         $collection = $this->getQuery($resource, $filters)->get();
-        $config = $this->resolveConfig($resource);
+        $config     = $this->resolveConfig($resource);
 
-        return $collection->map(function ($item) use ($config, $includes) {
-            return $this->applyIncludes((array)$item, $config, $includes);
-        });
+        return $collection->map(fn($item) => $this->applyIncludes((array) $item, $config, $includes));
     }
 
     public function find(string $resource, $id, array $filters = [])
     {
         $config = $this->resolveConfig($resource);
-        $item = $this->getQuery($resource, $filters)->where($config['primaryKey'], $id)->first();
-        
+        $item   = $this->getQuery($resource, $filters)
+            ->where($config['table'] . '.' . $config['primaryKey'], $id)
+            ->first();
+
         return $item ? (array) $item : null;
     }
 
@@ -126,6 +209,10 @@ class DynamicRepository
         return $this->applyIncludes($item, $config, $includes);
     }
 
+    // -------------------------------------------------------------------------
+    // RELATION LOADING (supports dot-notation nesting: posts.comments.author)
+    // -------------------------------------------------------------------------
+
     protected function applyIncludes(array $item, array $config, array $includes): array
     {
         if (!empty($includes)) {
@@ -134,67 +221,105 @@ class DynamicRepository
         return $this->filterHidden($item, $config);
     }
 
+    /**
+     * Loads relations. Supports dot-notation for nesting.
+     * e.g. ['posts', 'posts.comments', 'posts.comments.author']
+     */
     protected function loadRelations(array $item, array $config, array $includes): array
     {
-        foreach ($includes as $relationName) {
-            // Smart Mapping: Search for 'user' or 'user_id'
-            $actualRelationKey = isset($config['belongsTo'][$relationName]) 
-                ? $relationName 
-                : (isset($config['belongsTo'][$relationName . '_id']) ? $relationName . '_id' : null);
+        // Group by top-level relation name
+        $topLevel = [];
+        $nested   = [];
 
-            // Case BelongsTo
-            if ($actualRelationKey) {
-                $relation = $config['belongsTo'][$actualRelationKey];
-                $foreignCol = $relation->foreignKey ?: (str_ends_with($actualRelationKey, '_id') ? $actualRelationKey : $actualRelationKey . '_id');
-                $relatedConfig = $this->registry->findEntityByClass($relation->relatedEntity);
-                
-                if ($relatedConfig && isset($item[$foreignCol])) {
-                    $relatedData = DB::table($relatedConfig['table'])
-                        ->where($relatedConfig['primaryKey'], $item[$foreignCol])
-                        ->first();
-                    
-                    if ($relatedData) {
-                        $item[$relationName] = $this->filterHidden((array)$relatedData, $relatedConfig);
-                    }
-                }
+        foreach ($includes as $include) {
+            if (str_contains($include, '.')) {
+                [$parent, $rest] = explode('.', $include, 2);
+                $nested[$parent][] = $rest;
+            } else {
+                $topLevel[] = $include;
             }
+        }
 
-            // Case HasMany
-            if (isset($config['hasMany'][$relationName])) {
-                $relation = $config['hasMany'][$relationName];
-                $relatedConfig = $this->registry->findEntityByClass($relation->relatedEntity);
-                
-                if ($relatedConfig) {
-                    $foreignCol = $relation->foreignKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+        // Load all unique top-level includes (including ones that also have nesting)
+        $allTopLevel = array_unique(array_merge($topLevel, array_keys($nested)));
 
-                    $results = DB::table($relatedConfig['table'])
-                        ->where($foreignCol, $item[$config['primaryKey']])
-                        ->get();
-                    
-                    $item[$relationName] = $results->map(function($r) use ($relatedConfig) {
-                        return $this->filterHidden((array)$r, $relatedConfig);
-                    })->toArray();
-                }
-            }
+        foreach ($allTopLevel as $relationName) {
+            $item = $this->loadSingleRelation($item, $config, $relationName, $nested[$relationName] ?? []);
+        }
 
-            // Case HasOne
-            if (isset($config['hasOne'][$relationName])) {
-                $relation = $config['hasOne'][$relationName];
-                $relatedConfig = $this->registry->findEntityByClass($relation->relatedEntity);
+        return $item;
+    }
 
-                if ($relatedConfig) {
-                    $foreignCol = $relation->foreignKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+    protected function loadSingleRelation(array $item, array $config, string $relationName, array $subIncludes): array
+    {
+        // BelongsTo (smart key mapping: 'user' or 'user_id')
+        $btKey = isset($config['belongsTo'][$relationName])
+            ? $relationName
+            : (isset($config['belongsTo'][$relationName . '_id']) ? $relationName . '_id' : null);
 
-                    $relatedData = DB::table($relatedConfig['table'])
-                        ->where($foreignCol, $item[$config['primaryKey']])
-                        ->first();
+        if ($btKey) {
+            $relation    = $config['belongsTo'][$btKey];
+            $foreignCol  = $relation->foreignKey ?: (str_ends_with($btKey, '_id') ? $btKey : $btKey . '_id');
+            $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
 
-                    if ($relatedData) {
-                        $item[$relationName] = $this->filterHidden((array)$relatedData, $relatedConfig);
+            if ($relatedConf && isset($item[$foreignCol])) {
+                $relatedRow = DB::table($relatedConf['table'])
+                    ->where($relatedConf['primaryKey'], $item[$foreignCol])
+                    ->first();
+
+                if ($relatedRow) {
+                    $relatedArr = $this->filterHidden((array) $relatedRow, $relatedConf);
+                    // Recursively load sub-includes
+                    if (!empty($subIncludes)) {
+                        $relatedArr = $this->loadRelations($relatedArr, $relatedConf, $subIncludes);
                     }
+                    $item[$relationName] = $relatedArr;
                 }
             }
         }
+
+        // HasMany
+        if (isset($config['hasMany'][$relationName])) {
+            $relation    = $config['hasMany'][$relationName];
+            $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
+
+            if ($relatedConf) {
+                $foreignCol = $relation->foreignKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+                $rows       = DB::table($relatedConf['table'])
+                    ->where($foreignCol, $item[$config['primaryKey']])
+                    ->get();
+
+                $item[$relationName] = $rows->map(function ($row) use ($relatedConf, $subIncludes) {
+                    $arr = $this->filterHidden((array) $row, $relatedConf);
+                    if (!empty($subIncludes)) {
+                        $arr = $this->loadRelations($arr, $relatedConf, $subIncludes);
+                    }
+                    return $arr;
+                })->toArray();
+            }
+        }
+
+        // HasOne
+        if (isset($config['hasOne'][$relationName])) {
+            $relation    = $config['hasOne'][$relationName];
+            $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
+
+            if ($relatedConf) {
+                $foreignCol = $relation->foreignKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+                $row        = DB::table($relatedConf['table'])
+                    ->where($foreignCol, $item[$config['primaryKey']])
+                    ->first();
+
+                if ($row) {
+                    $arr = $this->filterHidden((array) $row, $relatedConf);
+                    if (!empty($subIncludes)) {
+                        $arr = $this->loadRelations($arr, $relatedConf, $subIncludes);
+                    }
+                    $item[$relationName] = $arr;
+                }
+            }
+        }
+
         return $item;
     }
 
@@ -206,27 +331,28 @@ class DynamicRepository
         return $data;
     }
 
+    // -------------------------------------------------------------------------
+    // WRITE OPERATIONS
+    // -------------------------------------------------------------------------
+
     public function insert(string $resource, array $data)
     {
-        $config = $this->resolveConfig($resource);
+        $config         = $this->resolveConfig($resource);
         $userIdentifier = request()->header('X-User-ID') ?? 'System';
-        
-        // Auto-inject tenant
+
         if ($config['tenantAware'] && request()->hasHeader('X-Tenant-ID')) {
             $data[$config['tenantColumn']] = request()->header('X-Tenant-ID');
         }
 
-        // Auto-audit creation
         if ($config['auditable']) {
             $data['created_by'] = $userIdentifier;
             $data['updated_by'] = $userIdentifier;
         }
 
-        // Auto-timestamps
         $data['created_at'] = now()->toDateTimeString();
         $data['updated_at'] = now()->toDateTimeString();
 
-        $id = $this->getQuery($resource)->insertGetId($data);
+        $id                      = DB::table($config['table'])->insertGetId($data);
         $data[$config['primaryKey']] = $id;
 
         return $this->filterHidden($data, $config);
@@ -234,25 +360,23 @@ class DynamicRepository
 
     public function update(string $resource, $id, array $data)
     {
-        $config = $this->resolveConfig($resource);
+        $config         = $this->resolveConfig($resource);
         $userIdentifier = request()->header('X-User-ID') ?? 'System';
 
-        // Auto-audit update
         if ($config['auditable']) {
             $data['updated_by'] = $userIdentifier;
         }
 
-        // Auto-timestamps
         $data['updated_at'] = now()->toDateTimeString();
 
-        $this->getQuery($resource)->where($config['primaryKey'], $id)->update($data);
+        DB::table($config['table'])->where($config['primaryKey'], $id)->update($data);
         return $this->find($resource, $id);
     }
 
     public function delete(string $resource, $id): bool
     {
         $config = $this->resolveConfig($resource);
-        $query = DB::table($config['table'])->where($config['primaryKey'], $id);
+        $query  = DB::table($config['table'])->where($config['primaryKey'], $id);
 
         if ($config['softDelete']) {
             return $query->update(['deleted_at' => now()]) > 0;

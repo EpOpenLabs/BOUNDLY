@@ -14,6 +14,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0-alpha] - 2026-03-22
+
+> 🔐 Production-ready security, performance, and developer experience upgrade.
+
+### Added
+- **`#[Authorize]` Attribute**: Declarative role-based access control (RBAC) directly on entity classes. Supports `roles`, `methods`, and `guard` parameters. Repeatable — multiple rules per class. Compatible with Spatie Laravel Permission and simple `role` column patterns.
+- **`ResourceAuthorize` Middleware**: Auto-wired into all generic API routes. Reads `#[Authorize]` at runtime — no manual middleware registration ever needed.
+- **`EntityValidator`**: Automatic payload validation and whitelist sanitization on all `POST`, `PUT`, and `PATCH` requests. Validates type, max length, and nullable constraints derived from `#[Column]` attributes. `PATCH` runs in partial mode (only validates fields present in the request).
+- **`core:cache` Command**: Generates a static PHP metadata cache (`bootstrap/cache/boundly.php`) for zero-overhead production boot. Supports `--clear` flag.
+- **Cache Auto-Switch**: `FrameworkCoreServiceProvider` automatically uses the static cache in production and falls back to live scanning in local environments.
+- **`hydrateFromCache()` on Registries**: `EntityRegistry` and `ActionRegistry` can now be hydrated from a flat array — enabling the static cache without reflection.
+- **`core:docs` Command**: Auto-generates a full **OpenAPI 3.0 (Swagger)** JSON specification (`storage/app/openapi.json`) from entity and action metadata. No documentation effort required from the programmer.
+- **Cursor-Based Pagination**: `DynamicRepository::cursorPaginate()` provides efficient pagination for large datasets. Activated automatically when `?cursor=` is present in the request.
+- **Nested Eager Loading (dot-notation)**: `?include=posts.comments.author` now loads arbitrarily nested relationships recursively.
+- **Extended Filter Operators**: New `_gte`, `_lte`, `_null` suffixes added. OR filter groups via `?or[field_like]=value` syntax.
+- **Sorting Support**: `?sort=field&direction=asc|desc` applied at the repository level with column whitelisting.
+- **`getAllActions()` on ActionRegistry**: Exposes the full action map for serialization (used by cache and doc commands).
+
+### Changed
+- **`core:migrate` — Migration History**: Tracks applied changes in a `boundly_migrations` table using MD5 fingerprinting of each entity's schema config. Unchanged entities are skipped entirely (idempotent runs).
+- **`core:migrate` — Dry Run**: `--dry-run` flag now previews all DDL changes without executing anything. Replaces the old `--force` flag.
+- **`core:migrate` — Non-Destructive by Default**: The command never drops columns or tables automatically.
+- **`GenericApiController`**: Refactored to use `EntityValidator` on write operations, support `PATCH` as a distinct partial-update method, and auto-switch between cursor and offset pagination.
+- **`DynamicRepository`**: Full internal rewrite preserving the same public API. Query building extracted into `applyFilter()`, relation loading extracted into `loadSingleRelation()` with recursion support.
+- **`FrameworkCoreServiceProvider`**: Registers `EntityValidator` singleton, wires `ResourceAuthorize` into generic routes, registers `core:cache` and `core:docs` commands.
+- **`config/boundly.php`**: Extended with `disable_cache`, `auth.default_guard`, and `pagination` sections. All values support `.env` overrides.
+- **`lang/en/messages.php`**: Added `unauthenticated` and `unauthorized` translation keys.
+
+### Architecture
+- Security is declarative: `#[Authorize]` on the entity = the route is protected. Zero infrastructure configuration.
+- Performance is opt-in: run `core:cache` before deploy = zero reflection at runtime.
+- Documentation is automatic: run `core:docs` = full OpenAPI spec ready for Swagger UI or Postman.
+
+---
+
 ## [0.1.0-alpha] - 2026-03-22
 
 > 🚀 First public alpha release of BOUNDLY.
@@ -44,5 +79,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.1.0-alpha...HEAD
+[Unreleased]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.2.0-alpha...HEAD
+[0.2.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.1.0-alpha...v0.2.0-alpha
 [0.1.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/releases/tag/v0.1.0-alpha

@@ -33,4 +33,19 @@ class ActionRegistry
         $key = strtoupper($method) . '_' . $resource;
         return $this->actions[$key] ?? null;
     }
+
+    public function getAllActions(): array
+    {
+        return $this->actions;
+    }
+
+    /**
+     * Bulk-loads the registry from a pre-built cache array.
+     * Used in production to avoid filesystem scanning and reflection.
+     */
+    public function hydrateFromCache(array $actions): void
+    {
+        $this->actions = $actions;
+    }
 }
+

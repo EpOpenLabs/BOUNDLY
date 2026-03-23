@@ -147,4 +147,14 @@ class EntityRegistry
         }
         return null;
     }
+
+    /**
+     * Bulk-loads the registry from a pre-built cache array.
+     * Used in production to avoid filesystem scanning and reflection.
+     */
+    public function hydrateFromCache(array $entities): void
+    {
+        $this->entities = $entities;
+    }
 }
+

@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://www.php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13%2B-red.svg)](https://laravel.com/)
-[![Version](https://img.shields.io/badge/version-0.1.0--alpha-orange.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0--alpha-orange.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
 
 </div>
 
@@ -24,7 +24,9 @@ You define your **Domain**. BOUNDLY handles the rest.
 - ✅ **Zero manual migrations** — Your DB schema evolves with your code.
 - ✅ **Zero route files** — Your endpoints are declared on your Use Cases.
 - ✅ **Zero boilerplate repositories** — Generic CRUD is handled automatically.
-- ✅ **Enterprise features in one line** — Auditing, Soft Delete, Multi-Tenancy.
+- ✅ **Zero validation rules** — Payloads are validated against your entity attributes.
+- ✅ **Enterprise features in one line** — Auditing, Soft Delete, Multi-Tenancy, Authorization.
+- ✅ **Production-ready** — Static metadata cache, migration history, and OpenAPI docs included.
 
 ---
 
@@ -80,7 +82,24 @@ Run `php artisan core:watch` and your `/api/users` endpoint is live. ✨
 
 ---
 
-### 🛡️ 2. Declarative Behavioral Traits
+### 🔐 2. Declarative Authorization
+Protect any resource with a single attribute — no route middleware, no guards to register manually:
+
+```php
+// Only admins and managers can access this resource
+#[Entity(table: 'salaries', resource: 'salaries')]
+#[Authorize(roles: ['admin', 'manager'])]
+class Salary extends AggregateRoot { ... }
+
+// Public reads, auth required for writes
+#[Entity(table: 'articles', resource: 'articles')]
+#[Authorize(roles: [], methods: ['POST', 'PUT', 'PATCH', 'DELETE'])]
+class Article extends AggregateRoot { ... }
+```
+
+---
+
+### 🛡️ 3. Declarative Behavioral Traits
 Add enterprise features with a single attribute:
 
 | Attribute | What it does |
@@ -88,44 +107,41 @@ Add enterprise features with a single attribute:
 | `#[Auditable]` | Injects `created_by` / `updated_by` — auto-populated from the request |
 | `#[SoftDelete]` | Handles `deleted_at` and filters queries silently |
 | `#[TenantAware]` | Multi-tenant data isolation at the repository level |
+| `#[Authorize]` | Role-based access control — reads PHP Attributes, not config files |
 
 ---
 
-### 🔎 3. Pro Query Engine
-Complex filtering out-of-the-box via URL parameters:
+### 🔎 4. Pro Query Engine
+Complex filtering, nested eager loading, and dual pagination out-of-the-box:
 
 ```bash
 # Partial search
 GET /api/users?name_like=boundly
 
-# Range filtering
-GET /api/users?id_gt=100&id_lt=200
+# Range filtering with new operators
+GET /api/users?age_gte=18&score_lte=100
 
-# Eager loading relationships
-GET /api/users?include=profile,posts
+# NOT and IN operators
+GET /api/products?category_not=5&id_in=1,2,3
 
-# Sorting & Pagination
-GET /api/users?sort=name&order=asc&per_page=20
+# OR filter groups
+GET /api/users?or[name_like]=john&or[email_like]=john
+
+# Nested eager loading (dot-notation)
+GET /api/users?include=posts.comments.author
+
+# Cursor pagination (efficient for large datasets)
+GET /api/events?cursor=250&per_page=20
+
+# Sorting & standard pagination
+GET /api/users?sort=name&direction=asc&per_page=20
 ```
 
 ---
 
-### 🌍 4. Full Internationalization (i18n)
-Console output speaks your language. Manage the locale from config:
+### 🌍 5. Full Internationalization (i18n)
+Console output speaks your language:
 
-```php
-// config/boundly.php
-return [
-    'locale' => 'en', // 'en' | 'es'
-    'api_prefix' => 'api',
-    'paths' => [
-        'domain'      => base_path('Domain'),
-        'application' => base_path('Application'),
-    ],
-];
-```
-
-Or override per-command with the `--lang` flag:
 ```bash
 php artisan core:watch --lang=es
 ```
@@ -184,16 +200,36 @@ php artisan core:watch
 
 🎉 Your API is live at `http://localhost:8000/api/users`.
 
+### 5. Before deploying to production
+
+```bash
+# Preview schema changes
+php artisan core:migrate --dry-run
+
+# Apply schema
+php artisan core:migrate
+
+# Cache metadata for zero-overhead boot
+php artisan core:cache
+
+# Generate OpenAPI documentation
+php artisan core:docs
+```
+
 ---
 
 ## ⚙️ Configuration Reference
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `locale` | `en` | Default language for CLI output (`en` or `es`) |
-| `api_prefix` | `api` | URL prefix for all auto-generated routes |
-| `paths.domain` | `Domain/` | Where BOUNDLY scans for `#[Entity]` classes |
-| `paths.application` | `Application/` | Where BOUNDLY scans for `#[Action]` classes |
+| Key | Default | Env Variable | Description |
+|-----|---------|-------------|-------------|
+| `locale` | `en` | `BOUNDLY_LOCALE` | Default language for CLI output |
+| `api_prefix` | `api` | `BOUNDLY_API_PREFIX` | URL prefix for all auto-generated routes |
+| `disable_cache` | `true` in local | `BOUNDLY_DISABLE_CACHE` | Forces scan mode; set `false` in production |
+| `auth.default_guard` | `sanctum` | `BOUNDLY_AUTH_GUARD` | Guard used by `#[Authorize]` middleware |
+| `pagination.default_per_page` | `15` | `BOUNDLY_PER_PAGE` | Default page size |
+| `pagination.max_per_page` | `100` | `BOUNDLY_MAX_PER_PAGE` | Hard cap on page size |
+| `paths.domain` | `Domain/` | — | Where BOUNDLY scans for `#[Entity]` |
+| `paths.application` | `Application/` | — | Where BOUNDLY scans for `#[Action]` |
 
 ---
 

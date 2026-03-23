@@ -3,12 +3,8 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | BOUNDLY Infrastructure Configuration
+    | BOUNDLY Framework Configuration
     |--------------------------------------------------------------------------
-    |
-    | This file allows you to configure the behavior of the metadata engine
-    | for your Domain and Infrastructure layers.
-    |
     */
 
     'locale' => env('BOUNDLY_LOCALE', 'en'),
@@ -17,11 +13,9 @@ return [
     |--------------------------------------------------------------------------
     | Discovery Paths
     |--------------------------------------------------------------------------
-    |
-    | Paths where the engine will scan for Entities, Traits, and Actions.
     */
     'paths' => [
-        'domain' => base_path('Domain'),
+        'domain'      => base_path('Domain'),
         'application' => base_path('Application'),
     ],
 
@@ -30,5 +24,35 @@ return [
     | API Prefix
     |--------------------------------------------------------------------------
     */
-    'api_prefix' => 'api',
+    'api_prefix' => env('BOUNDLY_API_PREFIX', 'api'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache
+    |--------------------------------------------------------------------------
+    | Set to true to force scanning even if a cache file exists.
+    | Useful during development (or set APP_ENV=local).
+    */
+    'disable_cache' => env('BOUNDLY_DISABLE_CACHE', app()->environment('local')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication
+    |--------------------------------------------------------------------------
+    | Default Laravel auth guard used by the ResourceAuthorize middleware
+    | when an entity declares #[Authorize] without an explicit guard.
+    */
+    'auth' => [
+        'default_guard' => env('BOUNDLY_AUTH_GUARD', 'sanctum'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pagination
+    |--------------------------------------------------------------------------
+    */
+    'pagination' => [
+        'default_per_page' => env('BOUNDLY_PER_PAGE', 15),
+        'max_per_page'     => env('BOUNDLY_MAX_PER_PAGE', 100),
+    ],
 ];
