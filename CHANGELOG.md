@@ -14,6 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0-alpha] - 2026-03-23
+
+> 📡 Agnostic WebSockets Bridge & Composite Action Routing.
+
+### Added
+- **`ShouldBroadcastToExterior` Interface**: Pure DDD contract for Domain Events that need real-time propagation to the frontend.
+- **`BroadcastableDomainEvent` Wrapper**: Infrastructure-level adapter that automatically translates pure Domain Events into Laravel serialization-friendly Broadcasting Jobs.
+- **`BroadcastServiceProvider`**: Bootstraps the bridge between the Domain and any WebSocket driver (Reverb, Pusher, Redis, Log) without coupling the core.
+
+### Fixed
+- **Composite Action Routing (`api/resource/id`)**: The `GenericApiController` and `ActionDispatcher` now perfectly route composite explicit endpoints (e.g., `posts/test-broadcast`) securely prior to falling back to CRUD defaults, solving 500/404 collision errors.
+- **Action Signature Standard**: Standardized the `ActionDispatcher` to strictly require `execute()` methods (with auto-injected Request/DTO parameters), replacing the old untyped `handle(array $data)` constraint.
+
+---
+
 ## [0.5.1-alpha] - 2026-03-22
 
 > 🧹 Framework Organs Cleanup (The Basement).

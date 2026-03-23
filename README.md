@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://www.php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13%2B-red.svg)](https://laravel.com/)
-[![Version](https://img.shields.io/badge/version-v0.5.4--alpha-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
+[![Version](https://img.shields.io/badge/version-v0.6.0--alpha-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
 
 </div>
 
@@ -34,6 +34,7 @@ You define your **Domain**. BOUNDLY handles the rest.
 - ✅ **Zero boilerplate repositories** — Generic CRUD is handled automatically.
 - ✅ **Zero validation rules** — Payloads are validated against your entity attributes.
 - ✅ **Enterprise features in one line** — Auditing, Soft Delete, Multi-Tenancy, Authorization.
+- ✅ **Real-Time Agnostic** — Propagate Domain Events to WebSockets without coupling your logic to a visual driver.
 - ✅ **Production-ready** — Static metadata cache, migration history, and OpenAPI docs included.
 
 ---
@@ -153,6 +154,12 @@ Console output speaks your language:
 ```bash
 php artisan core:watch --lang=es
 ```
+
+---
+
+### 📡 6. Agnostic WebSockets Bridge
+Broadcast your domain events to the frontend in real-time, completely decoupled from infrastructure (Reverb, Pusher, Soketi) using the purely semantic `ShouldBroadcastToExterior` contract.
+[Read the Integration Guide](https://github.com/EpOpenLabs/BOUNDLY/wiki/WebSockets-Integration)
 
 ---
 
