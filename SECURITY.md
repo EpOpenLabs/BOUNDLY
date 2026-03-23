@@ -2,20 +2,20 @@
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+BOUNDLY is currently in **active development (Alpha)**. We recommend always using the latest version from the `main` branch.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| v0.5.x-alpha | :white_check_mark: |
+| < v0.5.0-alpha | :x:                |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you discover a security vulnerability within BOUNDLY, please **do not open a public issue**. Instead, follow these steps:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+1. Send an email to **security@epopenlabs.com** (or open a Private Vulnerability Report on GitHub if enabled).
+2. Include a detailed description of the vulnerability and steps to reproduce it.
+3. We will acknowledge your report within **48 hours**.
+4. We will coordinate with you to fix the issue and determine a disclosure timeline.
+
+Thank you for helping us keep BOUNDLY secure! ❤️
