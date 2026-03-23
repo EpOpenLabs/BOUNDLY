@@ -11,7 +11,7 @@ BOUNDLY is currently in **active development (Alpha)**. We recommend always usin
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within BOUNDLY, please **do not open a public issue**. Instead, use the **[GitHub Private Vulnerability Reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-advising-on-vulnerabilities/privately-reporting-a-security-vulnerability)** feature in this repository.
+If you discover a security vulnerability within BOUNDLY, please **do not open a public issue**. Instead, use the **[GitHub Private Vulnerability Reporting](https://github.com/EpOpenLabs/BOUNDLY/security/advisories/new)** feature in this repository.
 
 1. Go to the "Security" tab of the repository.
 2. Select "Reporting a vulnerability".
