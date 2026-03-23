@@ -15,6 +15,14 @@
 
 ---
 
+## 🗺️ Roadmap & Strategy
+
+Stay updated on our progress toward **v1.0.0**. We are currently in active alpha development.
+
+👉 **[View Full Roadmap on Wiki](https://github.com/EpOpenLabs/BOUNDLY/wiki/Roadmap)**
+
+---
+
 ## 🧠 What is BOUNDLY?
 
 **BOUNDLY** is a high-performance PHP framework inspired by **Domain-Driven Design (DDD)** and **Convention-over-Configuration**. It eliminates boilerplate code by using PHP 8+ **Attributes** as the single source of truth for your infrastructure.
