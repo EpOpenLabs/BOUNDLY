@@ -10,6 +10,7 @@ use Infrastructure\FrameworkCore\Attributes\TenantAware;
 use Infrastructure\FrameworkCore\Attributes\HasMany;
 use Infrastructure\FrameworkCore\Attributes\BelongsTo;
 use Infrastructure\FrameworkCore\Attributes\HasOne;
+use Infrastructure\FrameworkCore\Attributes\ManyToMany;
 use Infrastructure\FrameworkCore\Attributes\Hidden;
 
 use Infrastructure\FrameworkCore\Attributes\Auditable;
@@ -50,6 +51,7 @@ class EntityRegistry
         $hasMany = [];
         $belongsTo = [];
         $hasOne = [];
+        $manyToMany = [];
         $hidden = [];
         $primaryKey = 'id'; 
 
@@ -90,6 +92,11 @@ class EntityRegistry
                 $hasOne[$propertyName] = $hoAttr[0]->newInstance();
             }
 
+            $mtmAttr = $property->getAttributes(ManyToMany::class);
+            if (!empty($mtmAttr)) {
+                $manyToMany[$propertyName] = $mtmAttr[0]->newInstance();
+            }
+
             // Detect Hidden fields at property level
             if (!empty($property->getAttributes(Hidden::class))) {
                 $hidden[] = $propertyName;
@@ -104,6 +111,7 @@ class EntityRegistry
             'hasMany'     => $hasMany,
             'belongsTo'   => $belongsTo,
             'hasOne'      => $hasOne,
+            'manyToMany'  => $manyToMany,
             'hidden'      => $hidden,
             'tenantAware' => $isTenantAware,
             'tenantColumn'=> $tenantColumn,

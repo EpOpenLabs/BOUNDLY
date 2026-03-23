@@ -65,6 +65,12 @@ class EntityValidator
             $rules[$colName] = $fieldRules;
         }
 
+        // --- Validate ManyToMany relationships (must be an array of IDs) ---
+        foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
+            $rules[$relName] = ['array', 'nullable'];
+            $rules["{$relName}.*"] = ['integer']; // We assume IDs are integers normally
+        }
+
         // Remove rules for fields that are purely derived (auto-injected by the infra)
         $autoFields = ['created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by'];
         foreach ($autoFields as $f) {
@@ -93,6 +99,11 @@ class EntityValidator
         // Also allow BelongsTo FK keys (e.g., 'user_id')
         foreach ($config['belongsTo'] as $relName => $relAttr) {
             $allowedKeys[] = $relAttr->foreignKey ?: $relName . '_id';
+        }
+
+        // Also allow ManyToMany array keys (e.g., 'roles')
+        foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
+            $allowedKeys[] = $relName;
         }
 
         return array_intersect_key($data, array_flip($allowedKeys));

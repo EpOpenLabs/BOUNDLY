@@ -73,6 +73,9 @@ class CoreMigrateCommand extends Command
             }
         }
 
+        // Process Many-To-Many Pivot Tables
+        $this->processPivotTables($entities, $isDryRun);
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         if ($isDryRun) {
@@ -179,6 +182,42 @@ class CoreMigrateCommand extends Command
         });
     }
 
+    protected function processPivotTables(array $entities, bool $isDryRun): void
+    {
+        $processedPivots = [];
+
+        foreach ($entities as $config) {
+            foreach ($config['manyToMany'] as $relName => $relAttr) {
+                $relatedConf = $this->registry->findEntityByClass($relAttr->relatedEntity);
+                if (!$relatedConf) continue;
+
+                $pivotTable = $relAttr->pivotTable;
+                if (!$pivotTable) {
+                    $names = [$config['table'], $relatedConf['table']];
+                    sort($names);
+                    $pivotTable = \Illuminate\Support\Str::singular($names[0]) . '_' . \Illuminate\Support\Str::singular($names[1]);
+                }
+
+                if (in_array($pivotTable, $processedPivots)) continue;
+                $processedPivots[] = $pivotTable;
+
+                if (!Schema::hasTable($pivotTable)) {
+                    $this->info("  <fg=green>[CREATE PIVOT]</> {$pivotTable} (for {$config['class']} <-> {$relatedConf['class']})");
+                    if (!$isDryRun) {
+                        $fk1 = $relAttr->foreignPivotKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+                        $fk2 = $relAttr->relatedPivotKey ?: \Illuminate\Support\Str::singular($relatedConf['table']) . '_id';
+                        
+                        Schema::create($pivotTable, function (Blueprint $table) use ($fk1, $fk2) {
+                            $table->foreignId($fk1);
+                            $table->foreignId($fk2);
+                            $table->primary([$fk1, $fk2]);
+                        });
+                    }
+                }
+            }
+        }
+    }
+
     protected function addColumn(Blueprint $table, string $colName, $colAttr, bool $change = false): void
     {
         $type     = $colAttr->type ?? 'string';
@@ -236,6 +275,7 @@ class CoreMigrateCommand extends Command
             'belongsTo'  => array_map(fn($r) => (array) $r, $config['belongsTo']),
             'hasMany'    => array_map(fn($r) => (array) $r, $config['hasMany']),
             'hasOne'     => array_map(fn($r) => (array) $r, $config['hasOne']),
+            'manyToMany' => array_map(fn($r) => (array) $r, $config['manyToMany'] ?? []),
             'auditable'  => $config['auditable'],
             'softDelete' => $config['softDelete'],
         ];

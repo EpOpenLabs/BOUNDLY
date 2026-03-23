@@ -146,8 +146,9 @@ class DynamicRepository
         $paginator = $this->getQuery($resource, $filters)->paginate($perPage);
         $config    = $this->resolveConfig($resource);
 
-        $paginator->getCollection()->transform(function ($item) use ($config, $includes) {
-            return (object) $this->applyIncludes((array) $item, $config, $includes);
+        $items = $this->loadEagerRelations($paginator->items(), $config, $includes);
+        $paginator->getCollection()->transform(function ($item, $key) use ($items) {
+            return (object) $items[$key];
         });
 
         return $paginator;
@@ -173,10 +174,10 @@ class DynamicRepository
         $hasMore = $results->count() > $perPage;
         $items   = $results->take($perPage);
 
-        $items = $items->map(fn($item) => $this->applyIncludes((array) $item, $config, $includes));
+        $loadedItems = $this->loadEagerRelations($items, $config, $includes);
 
         return [
-            'data'        => $items->values(),
+            'data'        => array_values($loadedItems),
             'next_cursor' => $hasMore ? $items->last()->{$pk} ?? null : null,
             'has_more'    => $hasMore,
         ];
@@ -187,7 +188,7 @@ class DynamicRepository
         $collection = $this->getQuery($resource, $filters)->get();
         $config     = $this->resolveConfig($resource);
 
-        return $collection->map(fn($item) => $this->applyIncludes((array) $item, $config, $includes));
+        return $this->loadEagerRelations($collection, $config, $includes);
     }
 
     public function find(string $resource, $id, array $filters = [])
@@ -197,7 +198,9 @@ class DynamicRepository
             ->where($config['table'] . '.' . $config['primaryKey'], $id)
             ->first();
 
-        return $item ? (array) $item : null;
+        if (!$item) return null;
+        
+        return $this->filterHidden((array) $item, $config);
     }
 
     public function findWithRelations(string $resource, $id, array $includes = [])
@@ -205,28 +208,28 @@ class DynamicRepository
         $item = $this->find($resource, $id);
         if (!$item) return null;
 
-        $config = $this->resolveConfig($resource);
-        return $this->applyIncludes($item, $config, $includes);
+        $config  = $this->resolveConfig($resource);
+        $results = $this->loadEagerRelations([$item], $config, $includes);
+        return $results[0] ?? null;
     }
 
     // -------------------------------------------------------------------------
-    // RELATION LOADING (supports dot-notation nesting: posts.comments.author)
+    // RELATION LOADING (Eager Loading to prevent N+1)
     // -------------------------------------------------------------------------
 
-    protected function applyIncludes(array $item, array $config, array $includes): array
+    protected function loadEagerRelations(iterable $items, array $config, array $includes): array
     {
-        if (!empty($includes)) {
-            $item = $this->loadRelations($item, $config, $includes);
+        $itemsArray = is_array($items) ? $items : (method_exists($items, 'toArray') ? $items->toArray() : (array) $items);
+        $itemsArray = array_map(fn($item) => (array) $item, $itemsArray);
+
+        if (empty($itemsArray)) {
+            return [];
         }
-        return $this->filterHidden($item, $config);
-    }
 
-    /**
-     * Loads relations. Supports dot-notation for nesting.
-     * e.g. ['posts', 'posts.comments', 'posts.comments.author']
-     */
-    protected function loadRelations(array $item, array $config, array $includes): array
-    {
+        if (empty($includes)) {
+            return array_map(fn($item) => $this->filterHidden($item, $config), $itemsArray);
+        }
+
         // Group by top-level relation name
         $topLevel = [];
         $nested   = [];
@@ -240,19 +243,18 @@ class DynamicRepository
             }
         }
 
-        // Load all unique top-level includes (including ones that also have nesting)
         $allTopLevel = array_unique(array_merge($topLevel, array_keys($nested)));
 
         foreach ($allTopLevel as $relationName) {
-            $item = $this->loadSingleRelation($item, $config, $relationName, $nested[$relationName] ?? []);
+            $itemsArray = $this->loadSingleRelationEagerly($itemsArray, $config, $relationName, $nested[$relationName] ?? []);
         }
 
-        return $item;
+        return array_map(fn($item) => $this->filterHidden($item, $config), $itemsArray);
     }
 
-    protected function loadSingleRelation(array $item, array $config, string $relationName, array $subIncludes): array
+    protected function loadSingleRelationEagerly(array $itemsArray, array $config, string $relationName, array $subIncludes): array
     {
-        // BelongsTo (smart key mapping: 'user' or 'user_id')
+        // 1. BelongsTo
         $btKey = isset($config['belongsTo'][$relationName])
             ? $relationName
             : (isset($config['belongsTo'][$relationName . '_id']) ? $relationName . '_id' : null);
@@ -262,65 +264,158 @@ class DynamicRepository
             $foreignCol  = $relation->foreignKey ?: (str_ends_with($btKey, '_id') ? $btKey : $btKey . '_id');
             $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
 
-            if ($relatedConf && isset($item[$foreignCol])) {
-                $relatedRow = DB::table($relatedConf['table'])
-                    ->where($relatedConf['primaryKey'], $item[$foreignCol])
-                    ->first();
+            if ($relatedConf) {
+                $foreignKeys = array_unique(array_filter(array_column($itemsArray, $foreignCol)));
 
-                if ($relatedRow) {
-                    $relatedArr = $this->filterHidden((array) $relatedRow, $relatedConf);
-                    // Recursively load sub-includes
+                if (!empty($foreignKeys)) {
+                    $relatedRows = DB::table($relatedConf['table'])
+                        ->whereIn($relatedConf['primaryKey'], $foreignKeys)
+                        ->get()
+                        ->map(fn($row) => (array) $row)
+                        ->toArray();
+
                     if (!empty($subIncludes)) {
-                        $relatedArr = $this->loadRelations($relatedArr, $relatedConf, $subIncludes);
+                        $relatedRows = $this->loadEagerRelations($relatedRows, $relatedConf, $subIncludes);
                     }
-                    $item[$relationName] = $relatedArr;
+
+                    $relatedById = array_column($relatedRows, null, $relatedConf['primaryKey']);
+
+                    foreach ($itemsArray as &$item) {
+                        $fk = $item[$foreignCol] ?? null;
+                        $item[$relationName] = $fk && isset($relatedById[$fk]) ? $relatedById[$fk] : null;
+                    }
+                } else {
+                    foreach ($itemsArray as &$item) $item[$relationName] = null;
                 }
             }
+            return $itemsArray;
         }
 
-        // HasMany
+        // 2. HasMany
         if (isset($config['hasMany'][$relationName])) {
             $relation    = $config['hasMany'][$relationName];
             $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
 
             if ($relatedConf) {
                 $foreignCol = $relation->foreignKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
-                $rows       = DB::table($relatedConf['table'])
-                    ->where($foreignCol, $item[$config['primaryKey']])
-                    ->get();
+                $parentIds  = array_unique(array_filter(array_column($itemsArray, $config['primaryKey'])));
 
-                $item[$relationName] = $rows->map(function ($row) use ($relatedConf, $subIncludes) {
-                    $arr = $this->filterHidden((array) $row, $relatedConf);
+                if (!empty($parentIds)) {
+                    $relatedRows = DB::table($relatedConf['table'])
+                        ->whereIn($foreignCol, $parentIds)
+                        ->get()
+                        ->map(fn($row) => (array) $row)
+                        ->toArray();
+
                     if (!empty($subIncludes)) {
-                        $arr = $this->loadRelations($arr, $relatedConf, $subIncludes);
+                        $relatedRows = $this->loadEagerRelations($relatedRows, $relatedConf, $subIncludes);
                     }
-                    return $arr;
-                })->toArray();
+
+                    $grouped = [];
+                    foreach ($relatedRows as $row) {
+                        $grouped[$row[$foreignCol]][] = $row;
+                    }
+
+                    foreach ($itemsArray as &$item) {
+                        $pk = $item[$config['primaryKey']] ?? null;
+                        $item[$relationName] = $pk && isset($grouped[$pk]) ? $grouped[$pk] : [];
+                    }
+                } else {
+                    foreach ($itemsArray as &$item) $item[$relationName] = [];
+                }
             }
+            return $itemsArray;
         }
 
-        // HasOne
+        // 3. HasOne
         if (isset($config['hasOne'][$relationName])) {
             $relation    = $config['hasOne'][$relationName];
             $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
 
             if ($relatedConf) {
                 $foreignCol = $relation->foreignKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
-                $row        = DB::table($relatedConf['table'])
-                    ->where($foreignCol, $item[$config['primaryKey']])
-                    ->first();
+                $parentIds  = array_unique(array_filter(array_column($itemsArray, $config['primaryKey'])));
 
-                if ($row) {
-                    $arr = $this->filterHidden((array) $row, $relatedConf);
+                if (!empty($parentIds)) {
+                    $relatedRows = DB::table($relatedConf['table'])
+                        ->whereIn($foreignCol, $parentIds)
+                        ->get()
+                        ->map(fn($row) => (array) $row)
+                        ->toArray();
+
                     if (!empty($subIncludes)) {
-                        $arr = $this->loadRelations($arr, $relatedConf, $subIncludes);
+                        $relatedRows = $this->loadEagerRelations($relatedRows, $relatedConf, $subIncludes);
                     }
-                    $item[$relationName] = $arr;
+
+                    $grouped = [];
+                    foreach ($relatedRows as $row) {
+                        $grouped[$row[$foreignCol]][] = $row;
+                    }
+
+                    foreach ($itemsArray as &$item) {
+                        $pk = $item[$config['primaryKey']] ?? null;
+                        $item[$relationName] = $pk && isset($grouped[$pk]) ? $grouped[$pk][0] : null;
+                    }
+                } else {
+                    foreach ($itemsArray as &$item) $item[$relationName] = null;
                 }
             }
+            return $itemsArray;
         }
 
-        return $item;
+        // 4. ManyToMany
+        if (isset($config['manyToMany'][$relationName])) {
+            $relation    = $config['manyToMany'][$relationName];
+            $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
+
+            if ($relatedConf) {
+                $pivotTable = $relation->pivotTable ?: (\Illuminate\Support\Str::singular(min($config['table'], $relatedConf['table'])) . '_' . \Illuminate\Support\Str::singular(max($config['table'], $relatedConf['table'])));
+                $fk1 = $relation->foreignPivotKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+                $fk2 = $relation->relatedPivotKey ?: \Illuminate\Support\Str::singular($relatedConf['table']) . '_id';
+                
+                $parentIds  = array_unique(array_filter(array_column($itemsArray, $config['primaryKey'])));
+
+                if (!empty($parentIds)) {
+                    $pivotRows = DB::table($pivotTable)->whereIn($fk1, $parentIds)->get();
+                    $relatedIds = $pivotRows->pluck($fk2)->unique()->toArray();
+
+                    if (!empty($relatedIds)) {
+                        $relatedRows = DB::table($relatedConf['table'])
+                            ->whereIn($relatedConf['primaryKey'], $relatedIds)
+                            ->get()
+                            ->map(fn($row) => (array) $row)
+                            ->toArray();
+
+                        if (!empty($subIncludes)) {
+                            $relatedRows = $this->loadEagerRelations($relatedRows, $relatedConf, $subIncludes);
+                        }
+
+                        $relatedById = array_column($relatedRows, null, $relatedConf['primaryKey']);
+
+                        $grouped = [];
+                        foreach ($pivotRows as $pivot) {
+                            $pId = $pivot->{$fk1};
+                            $rId = $pivot->{$fk2};
+                            if (isset($relatedById[$rId])) {
+                                $grouped[$pId][] = $relatedById[$rId];
+                            }
+                        }
+
+                        foreach ($itemsArray as &$item) {
+                            $pk = $item[$config['primaryKey']] ?? null;
+                            $item[$relationName] = $pk && isset($grouped[$pk]) ? $grouped[$pk] : [];
+                        }
+                    } else {
+                        foreach ($itemsArray as &$item) $item[$relationName] = [];
+                    }
+                } else {
+                    foreach ($itemsArray as &$item) $item[$relationName] = [];
+                }
+            }
+            return $itemsArray;
+        }
+
+        return $itemsArray;
     }
 
     protected function filterHidden(array $data, array $config): array
@@ -352,10 +447,23 @@ class DynamicRepository
         $data['created_at'] = now()->toDateTimeString();
         $data['updated_at'] = now()->toDateTimeString();
 
-        $id                      = DB::table($config['table'])->insertGetId($data);
-        $data[$config['primaryKey']] = $id;
+        // 1. Extract ManyToMany IDs from payload before inserting
+        $manyToManyData = [];
+        foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
+            if (isset($data[$relName])) {
+                $manyToManyData[$relName] = ['attr' => $relAttr, 'ids' => $data[$relName]];
+                unset($data[$relName]);
+            }
+        }
 
-        return $this->filterHidden($data, $config);
+        $id = DB::table($config['table'])->insertGetId($data);
+        
+        // 2. Sync ManyToMany Pivot Tables
+        foreach ($manyToManyData as $relName => $relInfo) {
+            $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
+        }
+
+        return $this->find($resource, $id);
     }
 
     public function update(string $resource, $id, array $data)
@@ -369,7 +477,24 @@ class DynamicRepository
 
         $data['updated_at'] = now()->toDateTimeString();
 
-        DB::table($config['table'])->where($config['primaryKey'], $id)->update($data);
+        // 1. Extract ManyToMany IDs from payload before updating
+        $manyToManyData = [];
+        foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
+            if (array_key_exists($relName, $data)) {
+                $manyToManyData[$relName] = ['attr' => $relAttr, 'ids' => $data[$relName]];
+                unset($data[$relName]);
+            }
+        }
+
+        if (!empty($data)) {
+            DB::table($config['table'])->where($config['primaryKey'], $id)->update($data);
+        }
+
+        // 2. Sync ManyToMany Pivot Tables
+        foreach ($manyToManyData as $relName => $relInfo) {
+            $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
+        }
+
         return $this->find($resource, $id);
     }
 
@@ -382,6 +507,43 @@ class DynamicRepository
             return $query->update(['deleted_at' => now()]) > 0;
         }
 
+        // Auto-cleanup ManyToMany pivot entries to maintain integrity
+        foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
+            $relatedConf = $this->registry->findEntityByClass($relAttr->relatedEntity);
+            if ($relatedConf) {
+                $pivotTable = $relAttr->pivotTable ?: (\Illuminate\Support\Str::singular(min($config['table'], $relatedConf['table'])) . '_' . \Illuminate\Support\Str::singular(max($config['table'], $relatedConf['table'])));
+                $fk1 = $relAttr->foreignPivotKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+                DB::table($pivotTable)->where($fk1, $id)->delete();
+            }
+        }
+
         return $query->delete() > 0;
+    }
+
+    protected function syncManyToMany(array $config, $parentId, $relAttr, $relatedIds): void
+    {
+        $relatedConf = $this->registry->findEntityByClass($relAttr->relatedEntity);
+        if (!$relatedConf) return;
+
+        $pivotTable = $relAttr->pivotTable ?: (\Illuminate\Support\Str::singular(min($config['table'], $relatedConf['table'])) . '_' . \Illuminate\Support\Str::singular(max($config['table'], $relatedConf['table'])));
+        $fk1 = $relAttr->foreignPivotKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+        $fk2 = $relAttr->relatedPivotKey ?: \Illuminate\Support\Str::singular($relatedConf['table']) . '_id';
+
+        $relatedIds = is_array($relatedIds) ? $relatedIds : [];
+
+        // Truncate existing mappings for this parent element
+        DB::table($pivotTable)->where($fk1, $parentId)->delete();
+
+        if (empty($relatedIds)) return;
+
+        $inserts = [];
+        foreach (array_unique($relatedIds) as $rId) {
+            $inserts[] = [
+                $fk1 => $parentId,
+                $fk2 => $rId
+            ];
+        }
+
+        DB::table($pivotTable)->insert($inserts);
     }
 }

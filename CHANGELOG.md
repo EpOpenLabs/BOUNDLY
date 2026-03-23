@@ -14,6 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0-alpha] - 2026-03-22
+
+> 🔗 Deep Relationships, Eager Loading Optimization, and Auto-Syncing engine upgrade.
+
+### Added
+- **`#[ManyToMany]` Attribute**: Declarative definition of Many-To-Many relationships directly on domain entities.
+- **Auto-Pivot Migrations**: `core:migrate` now automatically detects `#[ManyToMany]` relationships and generates the necessary pivot tables (e.g., `role_user`) along with composite foreign keys, without requiring any manual `Schema::create` code.
+- **Eager Loading Optimization (N+1 Fix)**: Completely rewrote `DynamicRepository`'s relationship loading logic. `?include=...` now executes highly efficient `WHERE IN (...)` queries (Eager Loading) for all relationship types (`BelongsTo`, `HasMany`, `HasOne`, `ManyToMany`), fixing the N+1 problem even with deeply nested includes (e.g. `posts.comments.author`).
+- **Auto-Syncing Relationships**: When writing data (`POST`, `PUT`, `PATCH`), the `DynamicRepository` will now automatically intercept arrays of IDs sent for `#[ManyToMany]` relationships (e.g. `{"roles": [1, 2]}`) and perform a transparent `sync()` operation on the pivot table.
+- **Cascade Pivot Deletes**: When deleting an entity via the `DELETE` endpoint, BOUNDLY now automatically cleans up all associated pivot records to maintain database integrity.
+- **Array Validation Support**: `EntityValidator` now automatically whitelists and validates `#[ManyToMany]` properties as nullable arrays of integers in incoming request payloads.
+
+---
+
 ## [0.2.0-alpha] - 2026-03-22
 
 > 🔐 Production-ready security, performance, and developer experience upgrade.
@@ -79,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.2.0-alpha...HEAD
+[Unreleased]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.3.0-alpha...HEAD
+[0.3.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.2.0-alpha...v0.3.0-alpha
 [0.2.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.1.0-alpha...v0.2.0-alpha
 [0.1.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/releases/tag/v0.1.0-alpha
