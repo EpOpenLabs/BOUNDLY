@@ -18,15 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > 🧹 Framework Organs Cleanup (The Basement).
 
-### v0.5.3-alpha (Test Automation & Morph Maps)
+### v0.5.4-alpha (Deep Save & Governance)
 - **Features**:
-  - Added **Action Test Stubs**: `core:make:test` now detects and generates tests for custom Applications Actions.
-  - Implemented **Morph Maps**: Support for `morphName` alias in `#[Entity]` to decouple DB types from PHP class names.
-  - Enhanced `EntityValidator` with dynamic morph type validation against the registry.
+  - Implemented **Deep Save (Nested Creation)**: Support for creating children resources in a single POST (HasMany, HasOne, MorphMany, MorphOne).
+  - Integrated **#[Policy]**: Automatic mapping of Domain Policies to API authorization via Laravel Gate.
+  - Added **Field-Level Permissions**: `roles` property in `#[Column]` to restrict visibility and editability per role.
 - **Improvements**:
-  - Improved `EntityRegistry` with bidirectional mapping for polymorphic types.
+  - Centralized role-checking logic into `ChecksPermissions` trait.
+  - Enhanced `DynamicRepository` to support recursive insertion and payload sanitization.
+  - Updated `GenericApiController` to return nested relations in POST/PUT/PATCH responses.
 
-### v0.5.2-alpha (Polymorphic Relations)
+### v0.5.3-alpha (Test Automation & Morph Maps)
 
 ### v0.5.1-alpha (Infrastructure Isolation)
 - **Infrastructure Isolation**: Deeply cleaned the `LaravelEngine` (basement), removing standard Laravel legacy tests and redundant configuration.

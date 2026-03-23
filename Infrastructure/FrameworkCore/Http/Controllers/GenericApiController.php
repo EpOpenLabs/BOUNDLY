@@ -55,32 +55,32 @@ class GenericApiController
                 ],
 
                 // POST /resource
-                $method === 'POST' => (function () use ($resource, $config, $request) {
+                $method === 'POST' => (function () use ($resource, $config, $request, $includes) {
                     $clean = $this->validator->validate($request->all(), $config, false);
                     return [
                         'status'  => 'success',
                         'message' => __('core::messages.resource_created_magic'),
-                        'data'    => $this->repository->insert($resource, $clean),
+                        'data'    => $this->repository->insert($resource, $clean, $includes),
                     ];
                 })(),
 
                 // PUT /resource/{id}
-                $method === 'PUT' => (function () use ($resource, $config, $request, $id) {
+                $method === 'PUT' => (function () use ($resource, $config, $request, $id, $includes) {
                     $clean = $this->validator->validate($request->all(), $config, false);
                     return [
                         'status'  => 'success',
                         'message' => __('core::messages.resource_updated_magic'),
-                        'data'    => $this->repository->update($resource, $id, $clean),
+                        'data'    => $this->repository->update($resource, $id, $clean, $includes),
                     ];
                 })(),
 
                 // PATCH /resource/{id} — partial update
-                $method === 'PATCH' => (function () use ($resource, $config, $request, $id) {
+                $method === 'PATCH' => (function () use ($resource, $config, $request, $id, $includes) {
                     $clean = $this->validator->validate($request->all(), $config, true);
                     return [
                         'status'  => 'success',
                         'message' => __('core::messages.resource_updated_magic'),
-                        'data'    => $this->repository->update($resource, $id, $clean),
+                        'data'    => $this->repository->update($resource, $id, $clean, $includes),
                     ];
                 })(),
 

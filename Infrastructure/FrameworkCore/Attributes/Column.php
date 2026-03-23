@@ -11,6 +11,7 @@ class Column
         public string $type = 'string',
         public ?int $length = null,
         public bool $nullable = false,
-        public mixed $default = null
+        public mixed $default = null,
+        public array $roles = [] // Only users with these roles can see/edit this column
     ) {}
 }

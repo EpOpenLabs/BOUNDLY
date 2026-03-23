@@ -127,6 +127,7 @@ class EntityRegistry
         }
 
         $this->entities[$resourceName] = [
+            'resource'    => $resourceName,
             'class'       => $className,
             'table'       => $entityConfig->table,
             'morphName'   => $entityConfig->morphName,

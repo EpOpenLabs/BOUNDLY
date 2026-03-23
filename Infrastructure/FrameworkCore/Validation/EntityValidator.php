@@ -4,6 +4,7 @@ namespace Infrastructure\FrameworkCore\Validation;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Infrastructure\FrameworkCore\Traits\ChecksPermissions;
 
 /**
  * Automatically validates incoming request data against
@@ -12,6 +13,8 @@ use Illuminate\Validation\ValidationException;
  */
 class EntityValidator
 {
+    use ChecksPermissions;
+
     public function __construct(protected \Infrastructure\FrameworkCore\Registry\EntityRegistry $registry) {}
     /**
      * Validate $data against the entity's column configuration.
@@ -106,7 +109,15 @@ class EntityValidator
      */
     public function sanitize(array $data, array $config): array
     {
-        $allowedKeys = array_keys($config['columns']);
+        $user        = auth()->user();
+        $allowedKeys = [];
+
+        // 1. Column-level permissions
+        foreach ($config['columns'] as $colName => $colAttr) {
+            if (empty($colAttr->roles) || $this->userHasRole($user, $colAttr->roles)) {
+                $allowedKeys[] = $colName;
+            }
+        }
 
         // Also allow BelongsTo FK keys (e.g., 'user_id')
         foreach ($config['belongsTo'] as $relName => $relAttr) {
@@ -124,6 +135,15 @@ class EntityValidator
             $allowedKeys[] = "{$morphName}_id";
             $allowedKeys[] = "{$morphName}_type";
         }
+
+        // Also allow nested collections for deep save (HasMany, MorphMany, etc.)
+        $nestedRelations = array_merge(
+            array_keys($config['hasMany'] ?? []),
+            array_keys($config['hasOne'] ?? []),
+            array_keys($config['morphMany'] ?? []),
+            array_keys($config['morphOne'] ?? [])
+        );
+        $allowedKeys = array_merge($allowedKeys, $nestedRelations);
 
         return array_intersect_key($data, array_flip($allowedKeys));
     }

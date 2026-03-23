@@ -6,6 +6,10 @@ use Closure;
 use Illuminate\Http\Request;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Infrastructure\FrameworkCore\Attributes\Authorize;
+use Infrastructure\FrameworkCore\Attributes\Policy;
+use Infrastructure\FrameworkCore\Database\DynamicRepository;
+use Infrastructure\FrameworkCore\Traits\ChecksPermissions;
+use Illuminate\Support\Facades\Gate;
 use ReflectionClass;
 
 /**
@@ -17,7 +21,12 @@ use ReflectionClass;
  */
 class ResourceAuthorize
 {
-    public function __construct(protected EntityRegistry $registry) {}
+    use ChecksPermissions;
+
+    public function __construct(
+        protected EntityRegistry    $registry,
+        protected DynamicRepository $repository
+    ) {}
 
     public function handle(Request $request, Closure $next)
     {
@@ -75,33 +84,38 @@ class ResourceAuthorize
             }
         }
 
+        // --- Policy Check ---
+        $policyAttr = $reflection->getAttributes(Policy::class);
+        if (!empty($policyAttr)) {
+            /** @var Policy $policy */
+            $policy = $policyAttr[0]->newInstance();
+            $id     = $request->route('id');
+            $verb   = $request->method();
+
+            $policyMethod = $this->mapVerbToPolicyMethod($verb, (bool)$id);
+
+            // Instance or Class based authorization?
+            if ($id && in_array($policyMethod, ['view', 'update', 'delete', 'restore', 'forceDelete'])) {
+                $instance = $this->repository->find($resource, $id);
+                if ($instance) {
+                    Gate::authorize($policyMethod, [$config['class'], (object)$instance]);
+                }
+            } else {
+                Gate::authorize($policyMethod, $config['class']);
+            }
+        }
+
         return $next($request);
     }
 
-    /**
-     * Checks if a user has any of the required roles.
-     * Compatible with Spatie Permission and a simple 'role' column.
-     */
-    protected function userHasRole($user, array $roles): bool
+    protected function mapVerbToPolicyMethod(string $verb, bool $hasId): string
     {
-        if (!$user) {
-            return false;
-        }
-
-        // Spatie Laravel Permission integration
-        if (method_exists($user, 'hasAnyRole')) {
-            return $user->hasAnyRole($roles);
-        }
-
-        // Fallback: simple 'role' or 'roles' column
-        if (isset($user->role)) {
-            return in_array($user->role, $roles);
-        }
-
-        if (isset($user->roles) && is_array($user->roles)) {
-            return !empty(array_intersect($user->roles, $roles));
-        }
-
-        return false;
+        return match ($verb) {
+            'GET'    => $hasId ? 'view' : 'viewAny',
+            'POST'   => 'create',
+            'PUT', 'PATCH' => 'update',
+            'DELETE' => 'delete',
+            default  => 'viewAny',
+        };
     }
 }

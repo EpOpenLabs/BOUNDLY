@@ -4,6 +4,7 @@ namespace Infrastructure\FrameworkCore\Database;
 
 use Illuminate\Support\Facades\DB;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
+use Infrastructure\FrameworkCore\Traits\ChecksPermissions;
 use Exception;
 
 /**
@@ -15,7 +16,12 @@ use Exception;
  */
 class DynamicRepository
 {
-    public function __construct(protected EntityRegistry $registry) {}
+    use ChecksPermissions;
+
+    public function __construct(
+        protected EntityRegistry $registry,
+        protected \Infrastructure\FrameworkCore\Validation\EntityValidator $validator
+    ) {}
 
     /**
      * Resolves the entity configuration by resource name or SQL table name.
@@ -547,9 +553,20 @@ class DynamicRepository
 
     protected function filterHidden(array $data, array $config): array
     {
+        $user = auth()->user();
+
+        // 1. Filter explicitly hidden fields
         foreach ($config['hidden'] ?? [] as $hiddenField) {
             unset($data[$hiddenField]);
         }
+
+        // 2. Filter fields with restricted roles
+        foreach ($config['columns'] as $colName => $colAttr) {
+            if (!empty($colAttr->roles) && !$this->userHasRole($user, $colAttr->roles)) {
+                unset($data[$colName]);
+            }
+        }
+
         return $data;
     }
 
@@ -557,8 +574,9 @@ class DynamicRepository
     // WRITE OPERATIONS
     // -------------------------------------------------------------------------
 
-    public function insert(string $resource, array $data)
+    public function insert(string $resource, array $data, array $includes = [])
     {
+        error_log("DynamicRepository::insert - Resource: {$resource}");
         $config         = $this->resolveConfig($resource);
         $userIdentifier = request()->header('X-User-ID') ?? 'System';
 
@@ -574,8 +592,12 @@ class DynamicRepository
         $data['created_at'] = now()->toDateTimeString();
         $data['updated_at'] = now()->toDateTimeString();
 
-        // 1. Extract ManyToMany IDs from payload before inserting
+        // 1. Extract relationship data before inserting parent
         $manyToManyData = [];
+        $hasRelData     = [];
+        $morphRelData   = [];
+
+        // ManyToMany
         foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
             if (isset($data[$relName])) {
                 $manyToManyData[$relName] = ['attr' => $relAttr, 'ids' => $data[$relName]];
@@ -583,17 +605,69 @@ class DynamicRepository
             }
         }
 
-        $id = DB::table($config['table'])->insertGetId($data);
+        // HasMany / HasOne
+        foreach (array_merge($config['hasMany'] ?? [], $config['hasOne'] ?? []) as $relName => $relAttr) {
+            if (isset($data[$relName])) {
+                $hasRelData[$relName] = ['attr' => $relAttr, 'data' => $data[$relName]];
+                unset($data[$relName]);
+            }
+        }
+
+        foreach (array_merge($config['morphMany'] ?? [], $config['morphOne'] ?? []) as $relName => $relAttr) {
+            if (isset($data[$relName])) {
+                $morphRelData[$relName] = ['attr' => $relAttr, 'data' => $data[$relName]];
+                unset($data[$relName]);
+            }
+        }
+
+        // --- Important: Sanitize data for the actual DB insert (keep only columns) ---
+        $insertData = $this->validator->sanitize($data, $config);
+
+        $id = DB::table($config['table'])->insertGetId($insertData);
         
-        // 2. Sync ManyToMany Pivot Tables
+        // 2. Process Nested Relations
+        
+        // ManyToMany Pivot Sync
         foreach ($manyToManyData as $relName => $relInfo) {
             $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
         }
 
-        return $this->findWithRelations($resource, $id);
+        // HasRel (Standard FK)
+        foreach ($hasRelData as $relName => $relInfo) {
+            $attr = $relInfo['attr'];
+            $items = is_array($relInfo['data']) && !isset($relInfo['data'][0]) ? [$relInfo['data']] : $relInfo['data'];
+            $fk   = $attr->foreignKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
+            $relatedEntityConf = $this->registry->findEntityByClass($attr->relatedEntity);
+            if ($relatedEntityConf) {
+                foreach ($items as $childData) {
+                    $childData[$fk] = $id;
+                    $this->insert($relatedEntityConf['resource'], $childData);
+                }
+            }
+        }
+
+        // MorphRel (Polymorphic FK)
+        foreach ($morphRelData as $relName => $relInfo) {
+            $attr = $relInfo['attr'];
+            $items = is_array($relInfo['data']) && !isset($relInfo['data'][0]) ? [$relInfo['data']] : $relInfo['data'];
+            $morphName = $attr->relation;
+            $idCol     = "{$morphName}_id";
+            $typeCol   = "{$morphName}_type";
+            $morphType = $this->registry->getMorphByClass($config['class']);
+            $relatedEntityConf = $this->registry->findEntityByClass($attr->relatedEntity);
+            if ($relatedEntityConf) {
+                foreach ($items as $childData) {
+                    $childData[$idCol]   = $id;
+                    $childData[$typeCol] = $morphType;
+                    $this->insert($relatedEntityConf['resource'], $childData);
+                }
+            }
+        }
+
+        return $this->findWithRelations($resource, $id, $includes);
     }
 
-    public function update(string $resource, $id, array $data)
+    public function update(string $resource, $id, array $data, array $includes = [])
     {
         $config         = $this->resolveConfig($resource);
         $userIdentifier = request()->header('X-User-ID') ?? 'System';
@@ -622,7 +696,7 @@ class DynamicRepository
             $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
         }
 
-        return $this->findWithRelations($resource, $id);
+        return $this->findWithRelations($resource, $id, $includes);
     }
 
     public function delete(string $resource, $id): bool

@@ -93,4 +93,31 @@ class CommentApiTest extends BoundlyTestCase
         $response->assertStatus(200)
                  ->assertJsonPath('data.commentable.title', 'Parent Post');
     }
+
+    /**
+     * Test Deep Save (Nested Creation)
+     */
+    public function test_can_create_post_with_nested_comments()
+    {
+        $payload = [
+            'title' => 'Deep Save Post',
+            'comments' => [
+                ['content' => 'Nested comment 1'],
+                ['content' => 'Nested comment 2'],
+            ]
+        ];
+
+        $response = $this->postJson('/api/posts?include=comments', $payload);
+
+        if ($response->status() !== 201) {
+            dump($response->json());
+        }
+        $response->assertStatus(201)
+                 ->assertJsonPath('data.title', 'Deep Save Post')
+                 ->assertJsonCount(2, 'data.comments');
+
+        $this->assertDatabaseHas('posts', ['title' => 'Deep Save Post']);
+        $this->assertDatabaseHas('comments', ['content' => 'Nested comment 1', 'commentable_type' => 'post']);
+        $this->assertDatabaseHas('comments', ['content' => 'Nested comment 2', 'commentable_type' => 'post']);
+    }
 }
