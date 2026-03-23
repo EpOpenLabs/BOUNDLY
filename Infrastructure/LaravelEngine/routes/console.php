@@ -3,6 +3,5 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Use this file to define your custom closure-based commands.
+// Most of the core features are managed by the BOUNDLY Core Commands.

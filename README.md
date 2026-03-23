@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://www.php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13%2B-red.svg)](https://laravel.com/)
-[![Version](https://img.shields.io/badge/version-v0.5.0--alpha-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
+[![Version](https://img.shields.io/badge/version-v0.5.1--alpha-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
 
 </div>
 

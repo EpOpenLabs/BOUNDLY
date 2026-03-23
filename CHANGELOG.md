@@ -14,6 +14,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.1-alpha] - 2026-03-22
+
+> 🧹 Framework Organs Cleanup (The Basement).
+
+### Fixed
+- **Infrastructure Isolation**: Deeply cleaned the `LaravelEngine` (basement), removing standard Laravel legacy tests and redundant configuration.
+- **Route Minimalization**: Emptied default `web.php` and `console.php` routes to avoid framework overhead and unwanted endpoints.
+- **Boilerplate Purity**: Removed temporary development scripts like `debug_db.php` and unnecessary default views.
+
+---
+
 ## [0.5.0-alpha] - 2026-03-22
 
 > 🧪 Automated Testing, Scaffolding Generator, and Multi-DB Parity.
