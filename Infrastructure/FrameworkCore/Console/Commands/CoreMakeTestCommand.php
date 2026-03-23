@@ -8,12 +8,21 @@ use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 class CoreMakeTestCommand extends Command
 {
     protected $signature = 'core:make:test {resource? : The resource or class name}';
-    protected $description = 'Generates an automated API test stub for a Domain Entity';
+    protected $description = 'Generates an automated API test stub for a Domain Entity or Application Action';
+    protected $registry;
+    protected $actionRegistry;
 
-    public function __construct(protected EntityRegistry $registry)
+    public function __construct(EntityRegistry $registry, \Infrastructure\FrameworkCore\Registry\ActionRegistry $actionRegistry)
     {
         parent::__construct();
+        $this->registry = $registry;
+        $this->actionRegistry = $actionRegistry;
     }
+    
+    // public function __construct(protected EntityRegistry $registry)
+    // {
+    //     parent::__construct();
+    // }
 
     public function handle()
     {
@@ -96,10 +105,19 @@ class CoreMakeTestCommand extends Command
 
         $payloadStr = implode("\n", $payloadArr);
         $endpoint   = config('boundly.api_prefix', 'api') . '/' . $resourceName;
-
+        
+        // Generate custom Action tests
+        $actionTests = "";
+        $resourceActions = $this->actionRegistry->getActionsByResource($resourceName);
+        foreach ($resourceActions as $method => $actionClass) {
+            $actionParts = explode('\\', $actionClass);
+            $actionName  = array_pop($actionParts);
+            $actionTests .= "\n    /**\n     * Custom Action Test: {$actionName}\n     * (Mapped to {$method} /{$endpoint})\n     */\n    public function test_custom_action_{$actionName}()\n    {\n        // \$this->withoutMiddleware(\\Infrastructure\\FrameworkCore\\Http\\Middleware\\ResourceAuthorize::class);\n\n        \$payload = [\n{$payloadStr}\n        ];\n\n        \$response = \$this->" . strtolower($method) . "Json('/{$endpoint}', \$payload);\n        \n        // TODO: CUSTOM ASSERTIONS for this action!\n        \$response->assertStatus(" . ($method === 'POST' ? '201' : '200') . ");\n    }\n";
+        }
+        
         $content = str_replace(
-            ['{{NAMESPACE}}', '{{CLASS}}', '{{ENDPOINT}}', '{{PAYLOAD}}', '{{TABLE}}'],
-            [$testNamespace, $testClassName, $endpoint, ltrim($payloadStr), $config['table']],
+            ['{{NAMESPACE}}', '{{CLASS}}', '{{ENDPOINT}}', '{{PAYLOAD}}', '{{TABLE}}', '{{ACTION_TESTS}}'],
+            [$testNamespace, $testClassName, $endpoint, ltrim($payloadStr), $config['table'], $actionTests],
             $stub
         );
 
@@ -147,7 +165,7 @@ class {{CLASS}} extends BoundlyTestCase
         $response->assertStatus(201);
         $this->assertDatabaseHas('{{TABLE}}', $payload);
     }
-}
+{{ACTION_TESTS}}}
 PHP;
     }
 }

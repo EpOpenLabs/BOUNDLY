@@ -39,6 +39,18 @@ class ActionRegistry
         return $this->actions;
     }
 
+    public function getActionsByResource(string $resource): array
+    {
+        $found = [];
+        foreach ($this->actions as $key => $className) {
+            if (str_ends_with($key, '_' . $resource)) {
+                $method = explode('_', $key)[0];
+                $found[$method] = $className;
+            }
+        }
+        return $found;
+    }
+
     /**
      * Bulk-loads the registry from a pre-built cache array.
      * Used in production to avoid filesystem scanning and reflection.

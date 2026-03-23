@@ -16,7 +16,7 @@ use Domain\Shared\Entities\AggregateRoot;
  * By defining this class, BOUNDLY infrastructure automatically creates
  * CRUD endpoints (GET /api/users, etc.) and synchronizes the database.
  */
-#[Entity(table: 'users', resource: 'users')]
+#[Entity(table: 'users', resource: 'users', morphName: 'user')]
 #[Auditable]
 #[SoftDelete]
 class User

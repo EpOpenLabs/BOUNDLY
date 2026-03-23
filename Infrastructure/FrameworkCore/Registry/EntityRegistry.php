@@ -22,6 +22,8 @@ use Infrastructure\FrameworkCore\Attributes\SoftDelete;
 class EntityRegistry
 {
     protected array $entities = [];
+    protected array $morphMapArr = []; // [alias => fullClass]
+    protected array $classToMorph = []; // [fullClass => alias]
 
     /**
      * Scans and registers a class as an entity if it contains the Entity attribute.
@@ -127,6 +129,7 @@ class EntityRegistry
         $this->entities[$resourceName] = [
             'class'       => $className,
             'table'       => $entityConfig->table,
+            'morphName'   => $entityConfig->morphName,
             'primaryKey'  => $primaryKey,
             'columns'     => $columns,
             'hasMany'     => $hasMany,
@@ -142,11 +145,43 @@ class EntityRegistry
             'auditable'   => $isAuditable,
             'softDelete'  => $isSoftDelete
         ];
+
+        if ($entityConfig->morphName) {
+            $this->morphMapArr[$entityConfig->morphName] = $className;
+            $this->classToMorph[$className]            = $entityConfig->morphName;
+        } else {
+            // Default to resource name if no morphName is provided
+            $this->morphMapArr[$resourceName] = $className;
+            $this->classToMorph[$className]   = $resourceName;
+        }
     }
 
     public function getEntityConfig(string $resource): ?array
     {
         return $this->entities[$resource] ?? null;
+    }
+
+    public function getClassByMorph(string $morphName): string
+    {
+        return $this->morphMapArr[$morphName] ?? $morphName;
+    }
+
+    public function getMorphByClass(string $className): string
+    {
+        // Try exact match
+        if (isset($this->classToMorph[$className])) {
+            return $this->classToMorph[$className];
+        }
+
+        // Try fuzzy match (with/without leading backslash)
+        $clean = ltrim($className, '\\');
+        foreach ($this->classToMorph as $fullClass => $morph) {
+            if (ltrim($fullClass, '\\') === $clean) {
+                return $morph;
+            }
+        }
+
+        return $className;
     }
 
     public function getAllEntities(): array

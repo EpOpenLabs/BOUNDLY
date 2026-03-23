@@ -22,7 +22,7 @@ class FrameworkCoreServiceProvider extends ServiceProvider
         $this->app->singleton(ActionRegistry::class,  fn() => new ActionRegistry());
 
         // 3. Register EntityValidator as a singleton
-        $this->app->singleton(EntityValidator::class, fn() => new EntityValidator());
+        $this->app->singleton(EntityValidator::class, fn($app) => new EntityValidator($app->make(EntityRegistry::class)));
     }
 
     public function boot(): void

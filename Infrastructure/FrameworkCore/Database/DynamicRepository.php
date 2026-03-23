@@ -436,7 +436,8 @@ class DynamicRepository
 
             foreach ($byType as $morphType => $idsToIndices) {
                 $ids = array_keys($idsToIndices);
-                $relatedConf = $this->registry->findEntityByClass($morphType);
+                $fullClass = $this->registry->getClassByMorph($morphType);
+                $relatedConf = $this->registry->findEntityByClass($fullClass);
 
                 if ($relatedConf) {
                     $relatedRows = DB::table($relatedConf['table'])
@@ -473,8 +474,9 @@ class DynamicRepository
                 $parentIds = array_unique(array_filter(array_column($itemsArray, $config['primaryKey'])));
 
                 if (!empty($parentIds)) {
+                    $morphAlias = $this->registry->getMorphByClass($config['class']);
                     $relatedRows = DB::table($relatedConf['table'])
-                        ->where($typeCol, $config['class'])
+                        ->where($typeCol, $morphAlias)
                         ->whereIn($idCol, $parentIds)
                         ->get()
                         ->map(fn($row) => (array) $row)
@@ -512,8 +514,9 @@ class DynamicRepository
                 $parentIds = array_unique(array_filter(array_column($itemsArray, $config['primaryKey'])));
 
                 if (!empty($parentIds)) {
+                    $morphAlias = $this->registry->getMorphByClass($config['class']);
                     $relatedRows = DB::table($relatedConf['table'])
-                        ->where($typeCol, $config['class'])
+                        ->where($typeCol, $morphAlias)
                         ->whereIn($idCol, $parentIds)
                         ->get()
                         ->map(fn($row) => (array) $row)

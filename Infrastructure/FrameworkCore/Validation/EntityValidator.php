@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
  */
 class EntityValidator
 {
+    public function __construct(protected \Infrastructure\FrameworkCore\Registry\EntityRegistry $registry) {}
     /**
      * Validate $data against the entity's column configuration.
      *
@@ -75,7 +76,11 @@ class EntityValidator
         foreach ($config['morphTo'] ?? [] as $relName => $relAttr) {
             $morphName = $relAttr->name ?: $relName;
             $rules["{$morphName}_id"]   = ['required_with:' . $morphName . '_type'];
-            $rules["{$morphName}_type"] = ['required_with:' . $morphName . '_id', 'string'];
+            $rules["{$morphName}_type"] = ['required_with:' . $morphName . '_id', 'string', function ($attribute, $value, $fail) {
+                if ($this->registry->getClassByMorph($value) === $value && !$this->registry->findEntityByClass($value)) {
+                    $fail("The type '{$value}' is not a valid registered entity or morph alias.");
+                }
+            }];
         }
 
         // Remove rules for fields that are purely derived (auto-injected by the infra)

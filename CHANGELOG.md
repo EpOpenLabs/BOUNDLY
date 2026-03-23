@@ -18,14 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > 🧹 Framework Organs Cleanup (The Basement).
 
-### v0.5.2-alpha (Polymorphic Relations)
+### v0.5.3-alpha (Test Automation & Morph Maps)
 - **Features**:
-  - Implemented `MorphTo`, `MorphMany`, and `MorphOne` relationship attributes.
-  - Automatic migration support for polymorphic columns (`morphs`).
-  - Polymorphic eager loading support in `DynamicRepository`.
-  - Added comprehensive test suite for polymorphic relationships.
+  - Added **Action Test Stubs**: `core:make:test` now detects and generates tests for custom Applications Actions.
+  - Implemented **Morph Maps**: Support for `morphName` alias in `#[Entity]` to decouple DB types from PHP class names.
+  - Enhanced `EntityValidator` with dynamic morph type validation against the registry.
 - **Improvements**:
-  - Fixed eager loading in single resource GET requests via `GenericApiController`.
+  - Improved `EntityRegistry` with bidirectional mapping for polymorphic types.
+
+### v0.5.2-alpha (Polymorphic Relations)
 
 ### v0.5.1-alpha (Infrastructure Isolation)
 - **Infrastructure Isolation**: Deeply cleaned the `LaravelEngine` (basement), removing standard Laravel legacy tests and redundant configuration.

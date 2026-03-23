@@ -8,7 +8,7 @@ use Infrastructure\FrameworkCore\Attributes\Column;
 use Infrastructure\FrameworkCore\Attributes\MorphMany;
 use Domain\Shared\Entities\AggregateRoot;
 
-#[Entity(table: 'posts', resource: 'posts')]
+#[Entity(table: 'posts', resource: 'posts', morphName: 'post')]
 class Post
 {
     use AggregateRoot;

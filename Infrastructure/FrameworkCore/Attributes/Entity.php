@@ -9,6 +9,7 @@ class Entity
 {
     public function __construct(
         public string $table,
-        public ?string $resource = null
+        public ?string $resource = null,
+        public ?string $morphName = null
     ) {}
 }

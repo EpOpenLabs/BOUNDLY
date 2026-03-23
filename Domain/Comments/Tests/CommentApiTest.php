@@ -27,7 +27,7 @@ class CommentApiTest extends BoundlyTestCase
         $respUserComment = $this->postJson('/api/comments', [
             'content'          => 'Nice profile!',
             'commentable_id'   => $userId,
-            'commentable_type' => User::class
+            'commentable_type' => 'user'
         ]);
         $respUserComment->assertStatus(201);
 
@@ -35,7 +35,7 @@ class CommentApiTest extends BoundlyTestCase
         $respPostComment = $this->postJson('/api/comments', [
             'content'          => 'Interesting article.',
             'commentable_id'   => $postId,
-            'commentable_type' => Post::class
+            'commentable_type' => 'post'
         ]);
         $respPostComment->assertStatus(201);
 
@@ -43,13 +43,13 @@ class CommentApiTest extends BoundlyTestCase
         $this->assertDatabaseHas('comments', [
             'content'          => 'Nice profile!',
             'commentable_id'   => $userId,
-            'commentable_type' => User::class
+            'commentable_type' => 'user'
         ]);
 
         $this->assertDatabaseHas('comments', [
             'content'          => 'Interesting article.',
             'commentable_id'   => $postId,
-            'commentable_type' => Post::class
+            'commentable_type' => 'post'
         ]);
     }
 
@@ -61,13 +61,13 @@ class CommentApiTest extends BoundlyTestCase
         $this->postJson('/api/comments', [
             'content'          => 'First comment',
             'commentable_id'   => $post['id'],
-            'commentable_type' => Post::class
+            'commentable_type' => 'post'
         ]);
 
         $this->postJson('/api/comments', [
             'content'          => 'Second comment',
             'commentable_id'   => $post['id'],
-            'commentable_type' => Post::class
+            'commentable_type' => 'post'
         ]);
 
         // Fetch post with comments
@@ -85,7 +85,7 @@ class CommentApiTest extends BoundlyTestCase
         $comment = $this->postJson('/api/comments', [
             'content'          => 'Individual comment',
             'commentable_id'   => $post['id'],
-            'commentable_type' => Post::class
+            'commentable_type' => 'post'
         ])->json('data');
 
         // Fetch comment with its parent (morphTo)
