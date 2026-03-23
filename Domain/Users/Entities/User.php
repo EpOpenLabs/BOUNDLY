@@ -8,6 +8,7 @@ use Infrastructure\FrameworkCore\Attributes\Column;
 use Infrastructure\FrameworkCore\Attributes\Hidden;
 use Infrastructure\FrameworkCore\Attributes\Auditable;
 use Infrastructure\FrameworkCore\Attributes\SoftDelete;
+use Infrastructure\FrameworkCore\Attributes\MorphMany;
 use Domain\Shared\Entities\AggregateRoot;
 
 /**
@@ -21,6 +22,9 @@ use Domain\Shared\Entities\AggregateRoot;
 class User
 {
     use AggregateRoot;
+
+    #[MorphMany(relatedEntity: \Domain\Comments\Entities\Comment::class, relation: 'commentable')]
+    private array $comments = [];
     
     #[Id]
     private int $id;

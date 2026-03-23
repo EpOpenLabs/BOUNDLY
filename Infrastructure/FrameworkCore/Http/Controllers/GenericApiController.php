@@ -50,7 +50,7 @@ class GenericApiController
                 // GET /resource/{id}
                 $method === 'GET' && (bool) $id => [
                     'status' => 'success',
-                    'data'   => $this->repository->find($resource, $id, $filters) 
+                    'data'   => $this->repository->findWithRelations($resource, $id, $includes) 
                                     ?? throw new \Exception(__('core::messages.resource_not_found', ['resource' => $resource]), 404),
                 ],
 

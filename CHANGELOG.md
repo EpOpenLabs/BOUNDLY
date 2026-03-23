@@ -18,7 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > 🧹 Framework Organs Cleanup (The Basement).
 
-### Fixed
+### v0.5.2-alpha (Polymorphic Relations)
+- **Features**:
+  - Implemented `MorphTo`, `MorphMany`, and `MorphOne` relationship attributes.
+  - Automatic migration support for polymorphic columns (`morphs`).
+  - Polymorphic eager loading support in `DynamicRepository`.
+  - Added comprehensive test suite for polymorphic relationships.
+- **Improvements**:
+  - Fixed eager loading in single resource GET requests via `GenericApiController`.
+
+### v0.5.1-alpha (Infrastructure Isolation)
 - **Infrastructure Isolation**: Deeply cleaned the `LaravelEngine` (basement), removing standard Laravel legacy tests and redundant configuration.
 - **Route Minimalization**: Emptied default `web.php` and `console.php` routes to avoid framework overhead and unwanted endpoints.
 - **Boilerplate Purity**: Removed temporary development scripts like `debug_db.php` and unnecessary default views.

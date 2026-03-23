@@ -201,7 +201,7 @@ class DynamicRepository
 
         if (!$item) return null;
         
-        return $this->filterHidden((array) $item, $config);
+        return (array) $item;
     }
 
     public function findWithRelations(string $resource, $id, array $includes = [])
@@ -220,6 +220,7 @@ class DynamicRepository
 
     protected function loadEagerRelations(iterable $items, array $config, array $includes): array
     {
+        DB::enableQueryLog();
         $itemsArray = is_array($items) ? $items : (method_exists($items, 'toArray') ? $items->toArray() : (array) $items);
         $itemsArray = array_map(fn($item) => (array) $item, $itemsArray);
 
@@ -416,6 +417,128 @@ class DynamicRepository
             return $itemsArray;
         }
 
+        // 5. MorphTo
+        if (isset($config['morphTo'][$relationName])) {
+            $relation  = $config['morphTo'][$relationName];
+            $morphName = $relation->name ?: $relationName;
+            $idCol     = "{$morphName}_id";
+            $typeCol   = "{$morphName}_type";
+
+            // Group items by type to perform separate queries
+            $byType = [];
+            foreach ($itemsArray as $index => $item) {
+                if (!empty($item[$idCol]) && !empty($item[$typeCol])) {
+                    $byType[$item[$typeCol]][$item[$idCol]][] = $index;
+                } else {
+                    $itemsArray[$index][$relationName] = null;
+                }
+            }
+
+            foreach ($byType as $morphType => $idsToIndices) {
+                $ids = array_keys($idsToIndices);
+                $relatedConf = $this->registry->findEntityByClass($morphType);
+
+                if ($relatedConf) {
+                    $relatedRows = DB::table($relatedConf['table'])
+                        ->whereIn($relatedConf['primaryKey'], $ids)
+                        ->get()
+                        ->map(fn($row) => (array) $row)
+                        ->toArray();
+
+                    if (!empty($subIncludes)) {
+                        $relatedRows = $this->loadEagerRelations($relatedRows, $relatedConf, $subIncludes);
+                    }
+
+                    $relatedById = array_column($relatedRows, null, $relatedConf['primaryKey']);
+
+                    foreach ($idsToIndices as $id => $indices) {
+                        foreach ($indices as $idx) {
+                            $itemsArray[$idx][$relationName] = $relatedById[$id] ?? null;
+                        }
+                    }
+                }
+            }
+            return $itemsArray;
+        }
+
+        // 6. MorphMany
+        if (isset($config['morphMany'][$relationName])) {
+            $relation    = $config['morphMany'][$relationName];
+            $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
+
+            if ($relatedConf) {
+                $morphName = $relation->relation;
+                $idCol     = "{$morphName}_id";
+                $typeCol   = "{$morphName}_type";
+                $parentIds = array_unique(array_filter(array_column($itemsArray, $config['primaryKey'])));
+
+                if (!empty($parentIds)) {
+                    $relatedRows = DB::table($relatedConf['table'])
+                        ->where($typeCol, $config['class'])
+                        ->whereIn($idCol, $parentIds)
+                        ->get()
+                        ->map(fn($row) => (array) $row)
+                        ->toArray();
+
+                    if (!empty($subIncludes)) {
+                        $relatedRows = $this->loadEagerRelations($relatedRows, $relatedConf, $subIncludes);
+                    }
+
+                    $grouped = [];
+                    foreach ($relatedRows as $row) {
+                        $grouped[$row[$idCol]][] = $row;
+                    }
+
+                    foreach ($itemsArray as &$item) {
+                        $pk = $item[$config['primaryKey']] ?? null;
+                        $item[$relationName] = $pk && isset($grouped[$pk]) ? $grouped[$pk] : [];
+                    }
+                } else {
+                    foreach ($itemsArray as &$item) $item[$relationName] = [];
+                }
+            }
+            return $itemsArray;
+        }
+
+        // 7. MorphOne
+        if (isset($config['morphOne'][$relationName])) {
+            $relation    = $config['morphOne'][$relationName];
+            $relatedConf = $this->registry->findEntityByClass($relation->relatedEntity);
+
+            if ($relatedConf) {
+                $morphName = $relation->relation;
+                $idCol     = "{$morphName}_id";
+                $typeCol   = "{$morphName}_type";
+                $parentIds = array_unique(array_filter(array_column($itemsArray, $config['primaryKey'])));
+
+                if (!empty($parentIds)) {
+                    $relatedRows = DB::table($relatedConf['table'])
+                        ->where($typeCol, $config['class'])
+                        ->whereIn($idCol, $parentIds)
+                        ->get()
+                        ->map(fn($row) => (array) $row)
+                        ->toArray();
+
+                    if (!empty($subIncludes)) {
+                        $relatedRows = $this->loadEagerRelations($relatedRows, $relatedConf, $subIncludes);
+                    }
+
+                    $grouped = [];
+                    foreach ($relatedRows as $row) {
+                        $grouped[$row[$idCol]] = $row;
+                    }
+
+                    foreach ($itemsArray as &$item) {
+                        $pk = $item[$config['primaryKey']] ?? null;
+                        $item[$relationName] = $pk && isset($grouped[$pk]) ? $grouped[$pk] : null;
+                    }
+                } else {
+                    foreach ($itemsArray as &$item) $item[$relationName] = null;
+                }
+            }
+            return $itemsArray;
+        }
+
         return $itemsArray;
     }
 
@@ -464,7 +587,7 @@ class DynamicRepository
             $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
         }
 
-        return $this->find($resource, $id);
+        return $this->findWithRelations($resource, $id);
     }
 
     public function update(string $resource, $id, array $data)
@@ -496,7 +619,7 @@ class DynamicRepository
             $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
         }
 
-        return $this->find($resource, $id);
+        return $this->findWithRelations($resource, $id);
     }
 
     public function delete(string $resource, $id): bool

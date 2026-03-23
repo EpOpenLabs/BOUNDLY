@@ -71,6 +71,13 @@ class EntityValidator
             $rules["{$relName}.*"] = ['integer']; // We assume IDs are integers normally
         }
 
+        // --- Validate MorphTo relationships ---
+        foreach ($config['morphTo'] ?? [] as $relName => $relAttr) {
+            $morphName = $relAttr->name ?: $relName;
+            $rules["{$morphName}_id"]   = ['required_with:' . $morphName . '_type'];
+            $rules["{$morphName}_type"] = ['required_with:' . $morphName . '_id', 'string'];
+        }
+
         // Remove rules for fields that are purely derived (auto-injected by the infra)
         $autoFields = ['created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by'];
         foreach ($autoFields as $f) {
@@ -104,6 +111,13 @@ class EntityValidator
         // Also allow ManyToMany array keys (e.g., 'roles')
         foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
             $allowedKeys[] = $relName;
+        }
+
+        // Also allow MorphTo columns (e.g., 'commentable_id', 'commentable_type')
+        foreach ($config['morphTo'] ?? [] as $relName => $relAttr) {
+            $morphName = $relAttr->name ?: $relName;
+            $allowedKeys[] = "{$morphName}_id";
+            $allowedKeys[] = "{$morphName}_type";
         }
 
         return array_intersect_key($data, array_flip($allowedKeys));

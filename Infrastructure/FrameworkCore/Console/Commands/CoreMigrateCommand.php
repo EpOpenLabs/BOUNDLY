@@ -111,6 +111,11 @@ class CoreMigrateCommand extends Command
                 }
             }
 
+            foreach ($config['morphTo'] as $relName => $relAttr) {
+                $morphName = $relAttr->name ?: $relName;
+                $table->morphs($morphName);
+            }
+
             if ($config['auditable']) {
                 $table->string('created_by')->nullable();
                 $table->string('updated_by')->nullable();
@@ -157,6 +162,16 @@ class CoreMigrateCommand extends Command
             }
         }
 
+        foreach ($config['morphTo'] as $relName => $relAttr) {
+            $morphName = $relAttr->name ?: $relName;
+            $idCol     = "{$morphName}_id";
+            $typeCol   = "{$morphName}_type";
+
+            if (!isset($currentColumns[$idCol])) {
+                $changes[] = ['op' => 'ADD_MORPH', 'col' => $morphName];
+            }
+        }
+
         if (empty($changes)) {
             return;
         }
@@ -176,6 +191,7 @@ class CoreMigrateCommand extends Command
                     'ADD_AUDIT'    => $table->string($change['col'])->nullable(),
                     'ADD_SOFT_DELETE' => $table->softDeletes(),
                     'ADD_FK'       => $table->foreignId($change['col'])->nullable(),
+                    'ADD_MORPH'    => $table->morphs($change['col']),
                     default        => null,
                 };
             }
@@ -276,6 +292,9 @@ class CoreMigrateCommand extends Command
             'hasMany'    => array_map(fn($r) => (array) $r, $config['hasMany']),
             'hasOne'     => array_map(fn($r) => (array) $r, $config['hasOne']),
             'manyToMany' => array_map(fn($r) => (array) $r, $config['manyToMany'] ?? []),
+            'morphTo'    => array_map(fn($r) => (array) $r, $config['morphTo'] ?? []),
+            'morphMany'  => array_map(fn($r) => (array) $r, $config['morphMany'] ?? []),
+            'morphOne'   => array_map(fn($r) => (array) $r, $config['morphOne'] ?? []),
             'auditable'  => $config['auditable'],
             'softDelete' => $config['softDelete'],
         ];

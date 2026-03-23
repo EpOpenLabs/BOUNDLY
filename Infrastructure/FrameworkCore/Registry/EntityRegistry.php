@@ -11,6 +11,9 @@ use Infrastructure\FrameworkCore\Attributes\HasMany;
 use Infrastructure\FrameworkCore\Attributes\BelongsTo;
 use Infrastructure\FrameworkCore\Attributes\HasOne;
 use Infrastructure\FrameworkCore\Attributes\ManyToMany;
+use Infrastructure\FrameworkCore\Attributes\MorphTo;
+use Infrastructure\FrameworkCore\Attributes\MorphMany;
+use Infrastructure\FrameworkCore\Attributes\MorphOne;
 use Infrastructure\FrameworkCore\Attributes\Hidden;
 
 use Infrastructure\FrameworkCore\Attributes\Auditable;
@@ -52,6 +55,9 @@ class EntityRegistry
         $belongsTo = [];
         $hasOne = [];
         $manyToMany = [];
+        $morphTo = [];
+        $morphMany = [];
+        $morphOne = [];
         $hidden = [];
         $primaryKey = 'id'; 
 
@@ -97,6 +103,21 @@ class EntityRegistry
                 $manyToMany[$propertyName] = $mtmAttr[0]->newInstance();
             }
 
+            $mToAttr = $property->getAttributes(MorphTo::class);
+            if (!empty($mToAttr)) {
+                $morphTo[$propertyName] = $mToAttr[0]->newInstance();
+            }
+
+            $mmAttr = $property->getAttributes(MorphMany::class);
+            if (!empty($mmAttr)) {
+                $morphMany[$propertyName] = $mmAttr[0]->newInstance();
+            }
+
+            $moAttr = $property->getAttributes(MorphOne::class);
+            if (!empty($moAttr)) {
+                $morphOne[$propertyName] = $moAttr[0]->newInstance();
+            }
+
             // Detect Hidden fields at property level
             if (!empty($property->getAttributes(Hidden::class))) {
                 $hidden[] = $propertyName;
@@ -112,6 +133,9 @@ class EntityRegistry
             'belongsTo'   => $belongsTo,
             'hasOne'      => $hasOne,
             'manyToMany'  => $manyToMany,
+            'morphTo'     => $morphTo,
+            'morphMany'   => $morphMany,
+            'morphOne'    => $morphOne,
             'hidden'      => $hidden,
             'tenantAware' => $isTenantAware,
             'tenantColumn'=> $tenantColumn,
