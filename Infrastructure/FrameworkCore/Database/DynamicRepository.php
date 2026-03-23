@@ -91,10 +91,11 @@ class DynamicRepository
     {
         $field    = $rawField;
         $operator = '=';
+        $likeOp   = DB::connection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
 
         $suffixes = [
-            '_like' => ['operator' => 'like', 'transform' => fn($v) => "%{$v}%", 'trim' => 5],
-            '_gt'   => ['operator' => '>',    'transform' => null,                'trim' => 3],
+            '_like' => ['operator' => $likeOp,  'transform' => fn($v) => "%{$v}%", 'trim' => 5],
+            '_gt'   => ['operator' => '>',      'transform' => null,               'trim' => 3],
             '_lt'   => ['operator' => '<',    'transform' => null,                'trim' => 3],
             '_gte'  => ['operator' => '>=',   'transform' => null,                'trim' => 4],
             '_lte'  => ['operator' => '<=',   'transform' => null,                'trim' => 4],

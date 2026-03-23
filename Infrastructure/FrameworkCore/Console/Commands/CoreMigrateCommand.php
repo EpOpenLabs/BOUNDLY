@@ -125,7 +125,7 @@ class CoreMigrateCommand extends Command
 
     protected function processExistingTable(string $tableName, array $config, bool $isDryRun): void
     {
-        $currentColumns = collect(DB::select("SHOW COLUMNS FROM `{$tableName}`"))->keyBy('Field');
+        $currentColumns = collect(Schema::getColumnListing($tableName))->flip();
 
         $changes = [];
 
