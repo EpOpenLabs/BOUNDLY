@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 // BOUNDLY: The Clean Root Bootstrap
 $app = Application::configure(basePath: realpath(__DIR__.'/../'))
     ->withRouting(
+        channels: __DIR__.'/../routes/channels.php',
         web: __DIR__.'/../Infrastructure/LaravelEngine/routes/web.php',
         commands: __DIR__.'/../Infrastructure/LaravelEngine/routes/console.php',
         health: '/up',

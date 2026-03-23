@@ -35,7 +35,16 @@ class GenericApiController
             $filters   = $request->query();
 
             // 2. Extensibility Layer: hand off to a custom Application Action if defined
-            $actionResult = $this->dispatcher->dispatch($resource, $method, $request);
+            $routePath = $id ? "{$resource}/{$id}" : $resource;
+            
+            // Try explicit composite route first (e.g. 'posts/test-broadcast')
+            $actionResult = $this->dispatcher->dispatch($routePath, $method, $request);
+            
+            // If no composite action, try base resource action (e.g. 'posts')
+            if ($actionResult === null && $id) {
+                $actionResult = $this->dispatcher->dispatch($resource, $method, $request);
+            }
+
             if ($actionResult !== null) {
                 $status = ($method === 'POST') ? 201 : 200;
                 return response()->json(['status' => 'success', 'data' => $actionResult], $status);
