@@ -23,8 +23,8 @@ class Post
     #[Column(type: 'text')]
     private string $content;
 
-    #[BelongsTo(relatedEntity: User::class, nullable: false)]
-    private int $user_id;
+    #[BelongsTo(relatedEntity: User::class)]
+    private array $user;
 
     public function __construct(string $title, string $content, int $userId)
     {

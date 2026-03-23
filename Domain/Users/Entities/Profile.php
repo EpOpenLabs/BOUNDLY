@@ -23,8 +23,8 @@ class Profile
     #[Column(type: 'string', length: 50)]
     private string $bio;
 
-    #[BelongsTo(relatedEntity: User::class, nullable: false)]
-    private int $user_id;
+    #[BelongsTo(relatedEntity: User::class)]
+    private array $user;
 
     public function __construct(string $avatarUrl, string $bio, int $userId)
     {

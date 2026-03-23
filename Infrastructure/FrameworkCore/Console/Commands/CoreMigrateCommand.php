@@ -49,7 +49,7 @@ class CoreMigrateCommand extends Command
             $this->ensureMigrationTable();
         }
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Schema::disableForeignKeyConstraints();
 
         foreach ($entities as $resourceName => $config) {
             $tableName   = $config['table'];
@@ -76,7 +76,7 @@ class CoreMigrateCommand extends Command
         // Process Many-To-Many Pivot Tables
         $this->processPivotTables($entities, $isDryRun);
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        Schema::enableForeignKeyConstraints();
 
         if ($isDryRun) {
             $this->warn('🔍 Dry run complete. No changes were made.');

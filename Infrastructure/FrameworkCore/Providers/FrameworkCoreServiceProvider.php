@@ -51,6 +51,7 @@ class FrameworkCoreServiceProvider extends ServiceProvider
                 \Infrastructure\FrameworkCore\Console\Commands\CoreWatchCommand::class,
                 \Infrastructure\FrameworkCore\Console\Commands\CoreCacheCommand::class,
                 \Infrastructure\FrameworkCore\Console\Commands\CoreDocCommand::class,
+                \Infrastructure\FrameworkCore\Console\Commands\CoreMakeTestCommand::class,
             ]);
 
             $this->publishes([
