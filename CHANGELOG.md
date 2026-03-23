@@ -14,6 +14,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0-alpha] - 2026-03-22
+
+> 🧪 Automated Testing, Scaffolding Generator, and Multi-DB Parity.
+
+### Added
+- **`core:make:test` Command**: Auto-generates smart integration tests for Domain Entities. It automatically builds mock payloads based on `#[Column]` types (email, int, string, etc.).
+- **`BoundlyTestCase` Integration**: Custom base test class that automatically triggers `core:migrate` before each test, enabling magic `:memory:` SQLite schema generation on the fly.
+- **`core:make:entity` Command**: High-speed scaffolding for DDD. Generates Domain entities in the correct directory/namespace with predefined attributes and traits like `--auditable` and `--soft-delete`.
+- **PostgreSQL & SQLite Parity**: Completely abstract schema inspection and native `ILIKE` support for PostgreSQL, ensuring a seamless experience across different database engines.
+
+### Fixed
+- **Foreign Key Collision**: Resolved an issue where `BelongsTo` would sometimes generate redundant column names (e.g., `user_id_id`) by adding smarter naming conventions.
+- **MySQL-Specific DDL**: Replaced hardcoded MySQL commands with database-agnostic `Schema` method calls in `CoreMigrateCommand`.
+
+---
+
+## [0.4.0-alpha] - 2026-03-22
+
+> 🧪 Automated Testing Engine.
+
+### Added
+- **API Test Generator**: Initial implementation of the `core:make:test` infrastructure.
+- **Testing Metadata Registry**: Entity registry now provides metadata specifically for test payload generation.
+
+---
+
 ## [0.3.0-alpha] - 2026-03-22
 
 > 🔗 Deep Relationships, Eager Loading Optimization, and Auto-Syncing engine upgrade.

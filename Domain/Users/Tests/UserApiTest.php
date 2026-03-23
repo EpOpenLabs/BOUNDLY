@@ -37,5 +37,6 @@ class UserApiTest extends BoundlyTestCase
         $response = $this->postJson('/api/users', $payload);
         
         $response->assertStatus(201);
+        $this->assertDatabaseHas('users', $payload);
     }
 }

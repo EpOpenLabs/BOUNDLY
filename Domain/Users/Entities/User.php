@@ -5,13 +5,10 @@ namespace Domain\Users\Entities;
 use Infrastructure\FrameworkCore\Attributes\Entity;
 use Infrastructure\FrameworkCore\Attributes\Id;
 use Infrastructure\FrameworkCore\Attributes\Column;
-use Infrastructure\FrameworkCore\Attributes\HasMany;
-use Infrastructure\FrameworkCore\Attributes\HasOne;
 use Infrastructure\FrameworkCore\Attributes\Hidden;
 use Infrastructure\FrameworkCore\Attributes\Auditable;
 use Infrastructure\FrameworkCore\Attributes\SoftDelete;
 use Domain\Shared\Entities\AggregateRoot;
-use Domain\Users\Events\UserCreated;
 
 /**
  * Pure Domain User Entity.
@@ -24,12 +21,6 @@ use Domain\Users\Events\UserCreated;
 class User
 {
     use AggregateRoot;
-    
-    #[HasOne(relatedEntity: Profile::class)]
-    private ?Profile $profile = null;
-
-    #[HasMany(relatedEntity: \Domain\Posts\Entities\Post::class)]
-    private array $posts = [];
     
     #[Id]
     private int $id;
@@ -56,11 +47,10 @@ class User
         $this->email = $email;
         // Pure business logic: hash password on instantiation.
         $this->password = password_hash($password, PASSWORD_BCRYPT);
-        
-        $this->record(new UserCreated($this));
     }
 
     // Pure Domain Getters
+    public function getId(): int { return $this->id; }
     public function getName(): string { return $this->name; }
     public function getEmail(): string { return $this->email; }
     public function getPassword(): string { return $this->password; }
