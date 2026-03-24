@@ -15,6 +15,7 @@
 [![CI](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml/badge.svg)](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
 [![Tests](https://img.shields.io/badge/Tests-218%20passing-brightgreen.svg)](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml)
+[![Packagist](https://img.shields.io/badge/Packagist-v0.9.0-violet.svg)](https://packagist.org/packages/epolabs/boundly)
 
 </div>
 
@@ -213,16 +214,36 @@ Broadcast your domain events to the frontend in real-time, completely decoupled 
 
 ## 🚀 Quick Start
 
-### 1. Clone the repository
+### 1. Create a new project
 
-> 📦 Packagist support (`composer create-project`) is planned for `v1.0.0`. For now, install via Git:
+```bash
+composer create-project epolabs/boundly my-project
+cd my-project
+```
+
+Or clone the repository:
 
 ```bash
 git clone https://github.com/EpOpenLabs/BOUNDLY.git my-project
 cd my-project
 composer install
+```
+
+### 2. Configure environment
+
+```bash
 cp .env.example .env
 php artisan key:generate
+```
+
+Configure your database in `.env`:
+
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=my_project
+DB_USERNAME=root
+DB_PASSWORD=secret
 ```
 
 ### 2. Configure your database
