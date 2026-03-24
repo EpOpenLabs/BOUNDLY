@@ -26,4 +26,15 @@ return [
 
     // Rate Limiting
     'rate_limit_exceeded' => 'Too many requests. Please slow down and try again later.',
+
+    // Brute Force Protection
+    'too_many_attempts' => 'Too many failed attempts. Please try again in :minutes minutes.',
+    'brute_force_lockout' => 'Your account has been temporarily locked due to too many failed login attempts.',
+
+    // API Key
+    'api_key_required' => 'API key is required. Please provide a valid API key.',
+    'api_key_invalid' => 'The provided API key is invalid.',
+    'api_key_inactive' => 'The provided API key has been deactivated.',
+    'api_key_insufficient_scopes' => 'The API key does not have the required permissions for this action.',
+    'api_key_provider_not_configured' => 'API key authentication is not properly configured.',
 ];

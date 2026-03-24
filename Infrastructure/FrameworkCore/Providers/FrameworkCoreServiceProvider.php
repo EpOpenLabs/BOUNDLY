@@ -11,10 +11,16 @@ use Infrastructure\FrameworkCore\Console\Commands\CoreMakeTestCommand;
 use Infrastructure\FrameworkCore\Console\Commands\CoreMigrateCommand;
 use Infrastructure\FrameworkCore\Console\Commands\CoreWatchCommand;
 use Infrastructure\FrameworkCore\Http\Controllers\GenericApiController;
+use Infrastructure\FrameworkCore\Http\Middleware\CorsMiddleware;
 use Infrastructure\FrameworkCore\Http\Middleware\RateLimitMiddleware;
+use Infrastructure\FrameworkCore\Http\Middleware\RequestSizeLimitMiddleware;
 use Infrastructure\FrameworkCore\Http\Middleware\ResourceAuthorize;
+use Infrastructure\FrameworkCore\Http\Middleware\SecurityHeadersMiddleware;
 use Infrastructure\FrameworkCore\Registry\ActionRegistry;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
+use Infrastructure\FrameworkCore\Services\BruteForceProtectionService;
+use Infrastructure\FrameworkCore\Services\InputSanitizer;
+use Infrastructure\FrameworkCore\Services\SecurityLogger;
 use Infrastructure\FrameworkCore\Validation\EntityValidator;
 use Symfony\Component\Finder\Finder;
 
@@ -31,6 +37,20 @@ class FrameworkCoreServiceProvider extends ServiceProvider
 
         // 3. Register EntityValidator as a singleton
         $this->app->singleton(EntityValidator::class, fn ($app) => new EntityValidator($app->make(EntityRegistry::class)));
+
+        // 4. Register SecurityLogger as a singleton
+        $this->app->singleton(SecurityLogger::class, fn () => new SecurityLogger);
+
+        // 5. Register BruteForceProtectionService as a singleton
+        $this->app->singleton(BruteForceProtectionService::class, function ($app) {
+            return new BruteForceProtectionService(
+                $app->make('cache')->driver(),
+                $app->make(SecurityLogger::class)
+            );
+        });
+
+        // 6. Register InputSanitizer as a singleton
+        $this->app->singleton(InputSanitizer::class, fn () => new InputSanitizer);
     }
 
     public function boot(): void
@@ -141,6 +161,15 @@ class FrameworkCoreServiceProvider extends ServiceProvider
         $prefix = config('boundly.api_prefix', 'api');
 
         $middleware = ['api'];
+
+        if (config('boundly.security.enabled', true)) {
+            $middleware[] = SecurityHeadersMiddleware::class;
+            $middleware[] = RequestSizeLimitMiddleware::class;
+        }
+
+        if (config('boundly.cors.enabled', false)) {
+            $middleware[] = CorsMiddleware::class;
+        }
 
         if (config('boundly.rate_limit.enabled', true)) {
             $middleware[] = RateLimitMiddleware::class;

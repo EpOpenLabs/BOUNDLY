@@ -10,6 +10,7 @@ use Infrastructure\FrameworkCore\Attributes\Behavior\Policy;
 use Infrastructure\FrameworkCore\Database\DynamicRepository;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Infrastructure\FrameworkCore\Traits\ChecksPermissions;
+use Infrastructure\FrameworkCore\Traits\ResolvesAuthentication;
 use ReflectionClass;
 
 /**
@@ -22,6 +23,7 @@ use ReflectionClass;
 class ResourceAuthorize
 {
     use ChecksPermissions;
+    use ResolvesAuthentication;
 
     public function __construct(
         protected EntityRegistry $registry,

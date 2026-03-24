@@ -26,4 +26,15 @@ return [
 
     // Rate Limiting
     'rate_limit_exceeded' => 'Demasiadas solicitudes. Por favor, reduce el ritmo e inténtalo más tarde.',
+
+    // Brute Force Protection
+    'too_many_attempts' => 'Demasiados intentos fallidos. Por favor, inténtalo de nuevo en :minutes minutos.',
+    'brute_force_lockout' => 'Tu cuenta ha sido temporalmente bloqueada debido a demasiados intentos de inicio de sesión fallidos.',
+
+    // API Key
+    'api_key_required' => 'Se requiere API key. Por favor, proporciona una API key válida.',
+    'api_key_invalid' => 'La API key proporcionada es inválida.',
+    'api_key_inactive' => 'La API key proporcionada ha sido desactivada.',
+    'api_key_insufficient_scopes' => 'La API key no tiene los permisos requeridos para esta acción.',
+    'api_key_provider_not_configured' => 'La autenticación con API key no está configurada correctamente.',
 ];
