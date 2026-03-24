@@ -2,9 +2,11 @@
 
 # 🪄 BOUNDLY
 
-**The Meta-Driven DDD PHP Framework**
+**The Metadata-Driven PHP Framework**
 
-> *Build enterprise-grade APIs by defining only your Domain.*
+> *Build enterprise-grade APIs by defining only your Domain. Everything else is automatic.*
+
+**Metadata-driven. Convention-over-Configuration. Zero Boilerplate.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue.svg)](https://www.php.net/)
@@ -28,17 +30,17 @@ Stay updated on our progress toward **v1.0.0**. We are currently in active alpha
 
 ## 🧠 What is BOUNDLY?
 
-**BOUNDLY** is a high-performance PHP framework inspired by **Domain-Driven Design (DDD)** and **Convention-over-Configuration**. It eliminates boilerplate code by using PHP 8+ **Attributes** as the single source of truth for your infrastructure.
+**BOUNDLY** is a high-performance PHP framework that uses **Metadata-Driven Architecture** and **Convention-over-Configuration**. It eliminates boilerplate code by using PHP 8+ **Attributes** as the single source of truth for your infrastructure.
 
-You define your **Domain**. BOUNDLY handles the rest.
+You define your **Domain** (entities, actions, business logic). BOUNDLY handles the **Infrastructure** (routes, controllers, validation, persistence).
 
 - ✅ **Zero manual migrations** — Your DB schema evolves with your code.
-- ✅ **Zero route files** — Your endpoints are declared on your Use Cases.
+- ✅ **Zero route files** — Your endpoints are declared on your Actions.
 - ✅ **Zero boilerplate repositories** — Generic CRUD is handled automatically.
 - ✅ **Zero validation rules** — Payloads are validated against your entity attributes.
-- ✅ **Enterprise features in one line** — Auditing, Soft Delete, Multi-Tenancy, Authorization.
+- ✅ **Enterprise features in one line** — Auditing, Soft Delete, Multi-Tenancy, Authorization, Rate Limiting.
 - ✅ **Real-Time Agnostic** — Propagate Domain Events to WebSockets without coupling your logic to a visual driver.
-- ✅ **Production-ready** — Static metadata cache, migration history, and OpenAPI docs included.
+- ✅ **Production-ready** — Static metadata cache, migration history, OpenAPI docs, and full CI/CD included.
 
 ---
 
