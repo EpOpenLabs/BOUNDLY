@@ -159,4 +159,20 @@ return [
             ],
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Monitoring (Hooks)
+    |--------------------------------------------------------------------------
+    |
+    | Configure external monitoring integrations.
+    | BOUNDLY provides hooks - you connect your preferred provider.
+    | Supported: 'sentry', 'bugsnag', 'grafana', null
+    |
+    */
+    'monitoring' => [
+        'enabled' => false,
+        'provider' => null,
+        'api_key' => env('MONITORING_API_KEY'),
+    ],
 ];
