@@ -183,17 +183,22 @@ class CoreMigrateCommand extends Command
 
         if ($isDryRun) return;
 
-        Schema::table($tableName, function (Blueprint $table) use ($config, $currentColumns, $changes) {
+        Schema::table($tableName, function (Blueprint $table) use ($changes) {
             foreach ($changes as $change) {
-                match ($change['op']) {
-                    'ADD'          => $this->addColumn($table, $change['col'], $change['attr']),
-                    'CHANGE'       => $this->addColumn($table, $change['col'], $change['attr'], change: true),
-                    'ADD_AUDIT'    => $table->string($change['col'])->nullable(),
-                    'ADD_SOFT_DELETE' => $table->softDeletes(),
-                    'ADD_FK'       => $table->foreignId($change['col'])->nullable(),
-                    'ADD_MORPH'    => $table->morphs($change['col']),
-                    default        => null,
-                };
+                $op = $change['op'];
+                if ($op === 'ADD') {
+                    $this->addColumn($table, $change['col'], $change['attr']);
+                } elseif ($op === 'CHANGE') {
+                    $this->addColumn($table, $change['col'], $change['attr'], change: true);
+                } elseif ($op === 'ADD_AUDIT') {
+                    $table->string($change['col'])->nullable();
+                } elseif ($op === 'ADD_SOFT_DELETE') {
+                    $table->softDeletes();
+                } elseif ($op === 'ADD_FK') {
+                    $table->foreignId($change['col'])->nullable();
+                } elseif ($op === 'ADD_MORPH') {
+                    $table->morphs($change['col']);
+                }
             }
         });
     }

@@ -6,8 +6,20 @@ BOUNDLY is currently in **active development (Alpha)**. We recommend always usin
 
 | Version | Supported          |
 | ------- | ------------------ |
-| v0.5.x-alpha | :white_check_mark: |
-| < v0.5.0-alpha | :x:                |
+| v0.7.x-alpha | :white_check_mark: |
+| v0.8.x-alpha | :white_check_mark: |
+| < v0.7.0-alpha | :x:                |
+
+## Security Features
+
+BOUNDLY includes the following security features out of the box:
+
+- **Input Sanitization**: Whitelist approach - only declared columns are accepted
+- **SQL Injection Prevention**: Column whitelist validation in DynamicRepository
+- **Rate Limiting**: Built-in `#[RateLimit]` attribute with per-IP/user tracking
+- **Authorization**: `#[Authorize]` attribute with role-based access control
+- **Sensitive Data Protection**: `#[Hidden]`, `#[Encrypted]`, `#[Hashed]` attributes
+- **Soft Delete**: Logical deletion prevents permanent data loss
 
 ## Reporting a Vulnerability
 

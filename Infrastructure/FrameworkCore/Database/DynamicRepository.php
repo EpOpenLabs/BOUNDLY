@@ -553,7 +553,8 @@ class DynamicRepository
 
     protected function filterHidden(array $data, array $config): array
     {
-        $user = auth()->user();
+        /** @var \Illuminate\Contracts\Auth\Authenticatable|null $user */
+        $user = auth()->guard()->user();
 
         // 1. Filter explicitly hidden fields
         foreach ($config['hidden'] ?? [] as $hiddenField) {
@@ -687,7 +688,7 @@ class DynamicRepository
             }
         }
 
-        if (!empty($data)) {
+        if (count($data) > 0) {
             DB::table($config['table'])->where($config['primaryKey'], $id)->update($data);
         }
 

@@ -1,0 +1,32 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
+parameters:
+    level: 5
+    
+    paths:
+        - Infrastructure/FrameworkCore
+        - Application
+
+    excludePaths:
+        - Infrastructure/LaravelEngine
+        - Infrastructure/FrameworkCore/Resources
+        
+    treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::any\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::prefix\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::middleware\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::group\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::get\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::post\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::put\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::patch\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::delete\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::options\(\)#'
+        - '#Call to an undefined method Illuminate\\Support\\Facades\\Route::match\(\)#'
+        - '#Method .+ not found#'
+        - '#Function .+ not found#'
+
+    reportUnmatchedIgnoredErrors: false

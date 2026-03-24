@@ -18,4 +18,11 @@ return [
     'resource_updated_magic' => 'Recurso actualizado exitosamente.',
     'resource_deleted_magic' => 'Recurso eliminado exitosamente.',
     'unsupported_method' => 'El método :method no está soportado.',
+
+    // Auth
+    'unauthenticated' => 'Se requiere autenticación para acceder a este recurso.',
+    'unauthorized' => 'No tienes el rol requerido para realizar esta acción.',
+
+    // Rate Limiting
+    'rate_limit_exceeded' => 'Demasiadas solicitudes. Por favor, reduce el ritmo e inténtalo más tarde.',
 ];

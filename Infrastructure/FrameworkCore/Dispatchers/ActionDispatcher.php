@@ -33,7 +33,7 @@ class ActionDispatcher
             
             foreach ($methodReflection->getParameters() as $param) {
                 $type = $param->getType();
-                if ($type && !$type->isBuiltin()) {
+                if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
                     $className = $type->getName();
                     if ($className === Request::class) {
                         $args[] = $request;

@@ -129,8 +129,16 @@ class FrameworkCoreServiceProvider extends ServiceProvider
     {
         $prefix = config('boundly.api_prefix', 'api');
 
+        $middleware = ['api'];
+        
+        if (config('boundly.rate_limit.enabled', true)) {
+            $middleware[] = \Infrastructure\FrameworkCore\Http\Middleware\RateLimitMiddleware::class;
+        }
+        
+        $middleware[] = \Infrastructure\FrameworkCore\Http\Middleware\ResourceAuthorize::class;
+
         Route::prefix($prefix)
-            ->middleware(['api', \Infrastructure\FrameworkCore\Http\Middleware\ResourceAuthorize::class])
+            ->middleware($middleware)
             ->group(function () {
                 Route::any('{resource}/{id?}', [
                     \Infrastructure\FrameworkCore\Http\Controllers\GenericApiController::class,

@@ -109,7 +109,8 @@ class EntityValidator
      */
     public function sanitize(array $data, array $config): array
     {
-        $user        = auth()->user();
+        /** @var \Illuminate\Contracts\Auth\Authenticatable|null $user */
+        $user        = auth()->guard()->user();
         $allowedKeys = [];
 
         // 1. Column-level permissions

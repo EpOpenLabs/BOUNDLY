@@ -57,7 +57,7 @@ class GenericApiController
                 $method === 'GET' && !$id => $this->handleList($resource, $config, $includes, $filters),
 
                 // GET /resource/{id}
-                $method === 'GET' && (bool) $id => [
+                $method === 'GET' && strlen($id) > 0 => [
                     'status' => 'success',
                     'data'   => $this->repository->findWithRelations($resource, $id, $includes) 
                                     ?? throw new \Exception(__('core::messages.resource_not_found', ['resource' => $resource]), 404),
@@ -135,13 +135,13 @@ class GenericApiController
     {
         // Cursor-based pagination (efficient for large tables)
         if (request()->has('cursor')) {
-            $perPage = (int) request()->query('per_page', 15);
+            $perPage = (int) request()->query('per_page', '15');
             $result  = $this->repository->cursorPaginate($resource, $perPage, $includes, $filters);
             return array_merge(['status' => 'success'], $result);
         }
 
         // Standard offset pagination
-        $perPage   = (int) request()->query('per_page', 15);
+        $perPage   = (int) request()->query('per_page', '15');
         $paginator = $this->repository->paginate($resource, $perPage, $includes, $filters);
 
         return [

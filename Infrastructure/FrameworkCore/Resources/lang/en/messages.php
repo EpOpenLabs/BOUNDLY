@@ -22,4 +22,7 @@ return [
     // Auth
     'unauthenticated'        => 'Authentication required to access this resource.',
     'unauthorized'           => 'You do not have the required role to perform this action.',
+
+    // Rate Limiting
+    'rate_limit_exceeded'    => 'Too many requests. Please slow down and try again later.',
 ];

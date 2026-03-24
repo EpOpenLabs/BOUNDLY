@@ -21,7 +21,7 @@ class CoreWatchCommand extends Command
 
         // Start Laravel Development Server using the absolute PHP path for reliability
         $phpFinder = new PhpExecutableFinder();
-        $phpPath = $phpFinder->find() ?? 'php';
+        $phpPath = $phpFinder->find() ?: 'php';
         $process = new Process([$phpPath, 'artisan', 'serve', '--port=8000']);
         $process->start();
 

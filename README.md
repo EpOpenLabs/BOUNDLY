@@ -7,9 +7,12 @@
 > *Build enterprise-grade APIs by defining only your Domain.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
-[![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://www.php.net/)
+[![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue.svg)](https://www.php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13%2B-red.svg)](https://laravel.com/)
 [![Version](https://img.shields.io/badge/version-v0.7.0--alpha-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
+[![CI](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml/badge.svg)](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml)
+[![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
+[![Tests](https://img.shields.io/badge/Tests-40%20passing-brightgreen.svg)](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml)
 
 </div>
 
@@ -130,8 +133,19 @@ Protect sensitive data with declarative security:
 | `#[Hidden]` | Exclude properties from API responses |
 | `#[Encrypted]` | Encrypt at rest with AES-256-CBC |
 | `#[Hashed]` | One-way hashing (bcrypt/Argon2) |
+| `#[RateLimit]` | API rate limiting with per-IP/user tracking |
 
-### ✅ 5. 40+ Validation Attributes
+### 🛡️ 5. Built-in Security
+Enterprise-grade security out of the box:
+
+| Feature | Description |
+|---------|-------------|
+| **Input Sanitization** | Whitelist approach - only declared columns are accepted |
+| **SQL Injection Prevention** | Column whitelist validation in DynamicRepository |
+| **Rate Limiting** | Built-in `#[RateLimit]` attribute |
+| **Authorization** | `#[Authorize]` attribute with role-based access control | |
+
+### ✅ 6. 40+ Validation Attributes
 Comprehensive data validation out of the box:
 
 - **Type**: Email, Url, IpAddress, Uuid, Json, IsoDate, Timezone, ColorHex, Slug, MacAddress
@@ -142,7 +156,7 @@ Comprehensive data validation out of the box:
 - **File**: Image, Mimes, FileSize
 - **Compound**: Required, Confirmed, Password, StrongPassword, SameAs, DifferentFrom
 
-### 🔗 6. Complete Relations Suite
+### 🔗 7. Complete Relations Suite
 All relationship types supported:
 
 | Relation | Attribute |
@@ -152,7 +166,7 @@ All relationship types supported:
 | Many-to-Many | `#[ManyToMany]` (with pivot sync) |
 | Polymorphic | `#[MorphTo]` / `#[MorphMany]` / `#[MorphOne]` |
 
-### 🔎 7. Pro Query Engine
+### 🔎 8. Pro Query Engine
 Complex filtering, nested eager loading, and dual pagination out-of-the-box:
 
 ```bash
@@ -180,7 +194,7 @@ GET /api/users?sort=name&direction=asc&per_page=20
 
 ---
 
-### 🌍 5. Full Internationalization (i18n)
+### 🌍 9. Full Internationalization (i18n)
 Console output speaks your language:
 
 ```bash
@@ -189,7 +203,7 @@ php artisan core:watch --lang=es
 
 ---
 
-### 📡 6. Agnostic WebSockets Bridge
+### 📡 10. Agnostic WebSockets Bridge
 Broadcast your domain events to the frontend in real-time, completely decoupled from infrastructure (Reverb, Pusher, Soketi) using the purely semantic `ShouldBroadcastToExterior` contract.
 [Read the Integration Guide](https://github.com/EpOpenLabs/BOUNDLY/wiki/WebSockets-Integration)
 
@@ -275,6 +289,9 @@ php artisan core:docs
 | `auth.default_guard` | `sanctum` | `BOUNDLY_AUTH_GUARD` | Guard used by `#[Authorize]` middleware |
 | `pagination.default_per_page` | `15` | `BOUNDLY_PER_PAGE` | Default page size |
 | `pagination.max_per_page` | `100` | `BOUNDLY_MAX_PER_PAGE` | Hard cap on page size |
+| `rate_limit.enabled` | `true` | `BOUNDLY_RATE_LIMIT_ENABLED` | Enable/disable rate limiting |
+| `rate_limit.max_attempts` | `60` | `BOUNDLY_RATE_LIMIT_MAX_ATTEMPTS` | Max requests per window |
+| `rate_limit.decay_minutes` | `1` | `BOUNDLY_RATE_LIMIT_DECAY_MINUTES` | Time window in minutes |
 | `paths.domain` | `Domain/` | — | Where BOUNDLY scans for `#[Entity]` |
 | `paths.application` | `Application/` | — | Where BOUNDLY scans for `#[Action]` |
 
