@@ -1,0 +1,47 @@
+<?php
+
+namespace Infrastructure\FrameworkCore\Attributes\Validation;
+
+class_alias(Email::class, 'Email');
+class_alias(Required::class, 'Required');
+class_alias(Min::class, 'Min');
+class_alias(Max::class, 'Max');
+class_alias(Between::class, 'Between');
+class_alias(Url::class, 'Url');
+class_alias(IpAddress::class, 'IpAddress');
+class_alias(Uuid::class, 'Uuid');
+class_alias(Json::class, 'Json');
+class_alias(IsoDate::class, 'IsoDate');
+class_alias(Timezone::class, 'Timezone');
+class_alias(ColorHex::class, 'ColorHex');
+class_alias(Slug::class, 'Slug');
+class_alias(MacAddress::class, 'MacAddress');
+class_alias(Positive::class, 'Positive');
+class_alias(Negative::class, 'Negative');
+class_alias(Integer::class, 'Integer');
+class_alias(Decimal::class, 'Decimal');
+class_alias(MaxLength::class, 'MaxLength');
+class_alias(MinLength::class, 'MinLength');
+class_alias(LengthBetween::class, 'LengthBetween');
+class_alias(Alphanumeric::class, 'Alphanumeric');
+class_alias(Alpha::class, 'Alpha');
+class_alias(Numeric::class, 'Numeric');
+class_alias(StartsWith::class, 'StartsWith');
+class_alias(EndsWith::class, 'EndsWith');
+class_alias(Contains::class, 'Contains');
+class_alias(Pattern::class, 'Pattern');
+class_alias(Phone::class, 'Phone');
+class_alias(CreditCard::class, 'CreditCard');
+class_alias(PostalCode::class, 'PostalCode');
+class_alias(Coordinates::class, 'Coordinates');
+class_alias(Unique::class, 'Unique');
+class_alias(Exists::class, 'Exists');
+class_alias(Enum::class, 'Enum');
+class_alias(Image::class, 'Image');
+class_alias(Mimes::class, 'Mimes');
+class_alias(FileSize::class, 'FileSize');
+class_alias(Confirmed::class, 'Confirmed');
+class_alias(Password::class, 'Password');
+class_alias(StrongPassword::class, 'StrongPassword');
+class_alias(SameAs::class, 'SameAs');
+class_alias(DifferentFrom::class, 'DifferentFrom');

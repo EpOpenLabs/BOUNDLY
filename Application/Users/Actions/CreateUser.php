@@ -3,7 +3,7 @@
 namespace Application\Users\Actions;
 
 use Application\Users\DTOs\UserDTO;
-use Infrastructure\FrameworkCore\Attributes\Action;
+use Infrastructure\FrameworkCore\Attributes\UseCase\Action;
 use Infrastructure\FrameworkCore\Database\DynamicRepository;
 use Illuminate\Http\Request;
 

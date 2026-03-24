@@ -3,21 +3,21 @@
 namespace Infrastructure\FrameworkCore\Registry;
 
 use ReflectionClass;
-use Infrastructure\FrameworkCore\Attributes\Entity;
-use Infrastructure\FrameworkCore\Attributes\Id;
-use Infrastructure\FrameworkCore\Attributes\Column;
-use Infrastructure\FrameworkCore\Attributes\TenantAware;
-use Infrastructure\FrameworkCore\Attributes\HasMany;
-use Infrastructure\FrameworkCore\Attributes\BelongsTo;
-use Infrastructure\FrameworkCore\Attributes\HasOne;
-use Infrastructure\FrameworkCore\Attributes\ManyToMany;
-use Infrastructure\FrameworkCore\Attributes\MorphTo;
-use Infrastructure\FrameworkCore\Attributes\MorphMany;
-use Infrastructure\FrameworkCore\Attributes\MorphOne;
-use Infrastructure\FrameworkCore\Attributes\Hidden;
+use Infrastructure\FrameworkCore\Attributes\Schema\Entity;
+use Infrastructure\FrameworkCore\Attributes\Schema\Id;
+use Infrastructure\FrameworkCore\Attributes\Schema\Column;
+use Infrastructure\FrameworkCore\Attributes\Behavior\TenantAware;
+use Infrastructure\FrameworkCore\Attributes\Relations\HasMany;
+use Infrastructure\FrameworkCore\Attributes\Relations\BelongsTo;
+use Infrastructure\FrameworkCore\Attributes\Relations\HasOne;
+use Infrastructure\FrameworkCore\Attributes\Relations\ManyToMany;
+use Infrastructure\FrameworkCore\Attributes\Relations\MorphTo;
+use Infrastructure\FrameworkCore\Attributes\Relations\MorphMany;
+use Infrastructure\FrameworkCore\Attributes\Relations\MorphOne;
+use Infrastructure\FrameworkCore\Attributes\Security\Hidden;
 
-use Infrastructure\FrameworkCore\Attributes\Auditable;
-use Infrastructure\FrameworkCore\Attributes\SoftDelete;
+use Infrastructure\FrameworkCore\Attributes\Behavior\Auditable;
+use Infrastructure\FrameworkCore\Attributes\Behavior\SoftDelete;
 
 class EntityRegistry
 {

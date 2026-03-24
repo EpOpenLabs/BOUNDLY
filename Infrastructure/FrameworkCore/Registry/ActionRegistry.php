@@ -3,7 +3,7 @@
 namespace Infrastructure\FrameworkCore\Registry;
 
 use ReflectionClass;
-use Infrastructure\FrameworkCore\Attributes\Action;
+use Infrastructure\FrameworkCore\Attributes\UseCase\Action;
 
 class ActionRegistry
 {

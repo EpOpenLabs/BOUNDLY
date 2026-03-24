@@ -7,9 +7,9 @@ use Infrastructure\FrameworkCore\Registry\ActionRegistry;
 
 use ReflectionClass;
 use Illuminate\Support\Facades\Validator;
-use Infrastructure\FrameworkCore\Attributes\Required;
-use Infrastructure\FrameworkCore\Attributes\Email;
-use Infrastructure\FrameworkCore\Attributes\Min;
+use Infrastructure\FrameworkCore\Attributes\Validation\Required;
+use Infrastructure\FrameworkCore\Attributes\Validation\Email;
+use Infrastructure\FrameworkCore\Attributes\Validation\Min;
 
 class ActionDispatcher
 {

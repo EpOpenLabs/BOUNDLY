@@ -2,13 +2,13 @@
 
 namespace Domain\Users\Entities;
 
-use Infrastructure\FrameworkCore\Attributes\Entity;
-use Infrastructure\FrameworkCore\Attributes\Id;
-use Infrastructure\FrameworkCore\Attributes\Column;
-use Infrastructure\FrameworkCore\Attributes\Hidden;
-use Infrastructure\FrameworkCore\Attributes\Auditable;
-use Infrastructure\FrameworkCore\Attributes\SoftDelete;
-use Infrastructure\FrameworkCore\Attributes\MorphMany;
+use Infrastructure\FrameworkCore\Attributes\Schema\Entity;
+use Infrastructure\FrameworkCore\Attributes\Schema\Id;
+use Infrastructure\FrameworkCore\Attributes\Schema\Column;
+use Infrastructure\FrameworkCore\Attributes\Security\Hidden;
+use Infrastructure\FrameworkCore\Attributes\Behavior\Auditable;
+use Infrastructure\FrameworkCore\Attributes\Behavior\SoftDelete;
+use Infrastructure\FrameworkCore\Attributes\Relations\MorphMany;
 use Domain\Shared\Entities\AggregateRoot;
 
 /**

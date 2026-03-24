@@ -43,12 +43,12 @@ class CoreMakeEntityCommand extends Command
         $classAttributes = [];
 
         if ($this->option('auditable')) {
-            $useStatements[]   = "use Infrastructure\FrameworkCore\Attributes\Auditable;";
+            $useStatements[]   = "use Infrastructure\FrameworkCore\Attributes\Behavior\Auditable;";
             $classAttributes[] = "#[Auditable]";
         }
 
         if ($this->option('soft-delete')) {
-            $useStatements[]   = "use Infrastructure\FrameworkCore\Attributes\SoftDelete;";
+            $useStatements[]   = "use Infrastructure\FrameworkCore\Attributes\Behavior\SoftDelete;";
             $classAttributes[] = "#[SoftDelete]";
         }
 
@@ -75,9 +75,9 @@ class CoreMakeEntityCommand extends Command
 
 namespace {{NAMESPACE}};
 
-use Infrastructure\FrameworkCore\Attributes\Entity;
-use Infrastructure\FrameworkCore\Attributes\Id;
-use Infrastructure\FrameworkCore\Attributes\Column;
+use Infrastructure\FrameworkCore\Attributes\Schema\Entity;
+use Infrastructure\FrameworkCore\Attributes\Schema\Id;
+use Infrastructure\FrameworkCore\Attributes\Schema\Column;
 use Domain\Shared\Entities\AggregateRoot;
 {{USE_TRAITS}}
 /**

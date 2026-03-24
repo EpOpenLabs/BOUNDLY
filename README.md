@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://www.php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13%2B-red.svg)](https://laravel.com/)
-[![Version](https://img.shields.io/badge/version-v0.6.0--alpha-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
+[![Version](https://img.shields.io/badge/version-v0.7.0--alpha-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
 
 </div>
 
@@ -117,10 +117,42 @@ Add enterprise features with a single attribute:
 | `#[SoftDelete]` | Handles `deleted_at` and filters queries silently |
 | `#[TenantAware]` | Multi-tenant data isolation at the repository level |
 | `#[Authorize]` | Role-based access control — reads PHP Attributes, not config files |
+| `#[Blameable]` | Extended audit trail tracking created_by/updated_by/deleted_by |
+| `#[Timestampable]` | Auto-manage created_at/updated_at timestamps |
+| `#[Sluggable]` | Auto-generate URL-friendly slugs from another field |
+| `#[Policy]` | Map Laravel Policies for fine-grained authorization |
 
----
+### 🔒 4. Security Attributes
+Protect sensitive data with declarative security:
 
-### 🔎 4. Pro Query Engine
+| Attribute | What it does |
+|-----------|-------------|
+| `#[Hidden]` | Exclude properties from API responses |
+| `#[Encrypted]` | Encrypt at rest with AES-256-CBC |
+| `#[Hashed]` | One-way hashing (bcrypt/Argon2) |
+
+### ✅ 5. 40+ Validation Attributes
+Comprehensive data validation out of the box:
+
+- **Type**: Email, Url, IpAddress, Uuid, Json, IsoDate, Timezone, ColorHex, Slug, MacAddress
+- **Numeric**: Min, Max, Between, Positive, Negative, Integer, Decimal
+- **String**: MinLength, MaxLength, LengthBetween, Alpha, Alphanumeric, Numeric, Pattern, StartsWith, EndsWith, Contains
+- **Format**: Phone, CreditCard, PostalCode, Coordinates
+- **Database**: Unique, Exists, Enum
+- **File**: Image, Mimes, FileSize
+- **Compound**: Required, Confirmed, Password, StrongPassword, SameAs, DifferentFrom
+
+### 🔗 6. Complete Relations Suite
+All relationship types supported:
+
+| Relation | Attribute |
+|---------|----------|
+| One-to-Many | `#[BelongsTo]` / `#[HasMany]` |
+| One-to-One | `#[HasOne]` |
+| Many-to-Many | `#[ManyToMany]` (with pivot sync) |
+| Polymorphic | `#[MorphTo]` / `#[MorphMany]` / `#[MorphOne]` |
+
+### 🔎 7. Pro Query Engine
 Complex filtering, nested eager loading, and dual pagination out-of-the-box:
 
 ```bash
