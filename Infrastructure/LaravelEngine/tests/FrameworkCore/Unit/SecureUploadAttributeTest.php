@@ -9,7 +9,7 @@ class SecureUploadAttributeTest extends TestCase
 {
     public function test_default_values(): void
     {
-        $attr = new SecureUpload();
+        $attr = new SecureUpload;
 
         $this->assertEquals(['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx'], $attr->getAllowedMimes());
         $this->assertEquals(10240, $attr->getMaxSizeKb());

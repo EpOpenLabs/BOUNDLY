@@ -10,8 +10,11 @@ use Illuminate\Support\Facades\Log;
 class StructuredLogger
 {
     protected string $channel;
+
     protected string $appName;
+
     protected string $environment;
+
     protected array $defaultContext;
 
     public function __construct()
@@ -97,6 +100,7 @@ class StructuredLogger
     {
         $clone = clone $this;
         $clone->channel = $channel;
+
         return $clone;
     }
 }

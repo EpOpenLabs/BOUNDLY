@@ -9,7 +9,7 @@ class TransactionalAttributeTest extends TestCase
 {
     public function test_default_values(): void
     {
-        $attr = new Transactional();
+        $attr = new Transactional;
 
         $this->assertEquals(1, $attr->getTries());
         $this->assertEquals(60, $attr->getTimeout());

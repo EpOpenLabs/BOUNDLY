@@ -9,8 +9,11 @@ use Illuminate\Http\Request;
 class RequestSigningService
 {
     protected string $algorithm;
+
     protected string $secretKey;
+
     protected int $timestampTolerance;
+
     protected bool $enabled;
 
     public function __construct()

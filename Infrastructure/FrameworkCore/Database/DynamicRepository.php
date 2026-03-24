@@ -55,7 +55,7 @@ class DynamicRepository
         }
 
         $reflection = new \ReflectionClass($config['class']);
-        
+
         return $reflection->getAttributes(Transactional::class) !== [];
     }
 

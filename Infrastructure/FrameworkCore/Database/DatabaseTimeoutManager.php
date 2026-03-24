@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 class DatabaseTimeoutManager
 {
     protected array $config;
+
     protected int $defaultTimeout;
 
     public function __construct()

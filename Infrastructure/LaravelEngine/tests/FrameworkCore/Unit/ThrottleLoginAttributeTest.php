@@ -9,7 +9,7 @@ class ThrottleLoginAttributeTest extends TestCase
 {
     public function test_default_values(): void
     {
-        $attr = new ThrottleLogin();
+        $attr = new ThrottleLogin;
 
         $this->assertEquals(5, $attr->maxAttempts);
         $this->assertEquals(15, $attr->decayMinutes);

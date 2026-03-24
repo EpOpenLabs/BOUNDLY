@@ -11,13 +11,13 @@ class RequestLoggerMiddlewareTest extends FrameworkCoreTestCase
 {
     public function test_middleware_can_be_instantiated(): void
     {
-        $middleware = new RequestLoggerMiddleware();
+        $middleware = new RequestLoggerMiddleware;
         $this->assertInstanceOf(RequestLoggerMiddleware::class, $middleware);
     }
 
     public function test_middleware_passes_request_through(): void
     {
-        $middleware = new RequestLoggerMiddleware();
+        $middleware = new RequestLoggerMiddleware;
         $request = Request::create('/api/users', 'GET');
         $response = new Response('OK', 200);
 
@@ -33,7 +33,7 @@ class RequestLoggerMiddlewareTest extends FrameworkCoreTestCase
 
     public function test_middleware_adds_request_id_header(): void
     {
-        $middleware = new RequestLoggerMiddleware();
+        $middleware = new RequestLoggerMiddleware;
         $request = Request::create('/api/users', 'GET');
         $response = new Response('OK', 200);
 
@@ -49,7 +49,7 @@ class RequestLoggerMiddlewareTest extends FrameworkCoreTestCase
 
     public function test_middleware_preserves_existing_request_id(): void
     {
-        $middleware = new RequestLoggerMiddleware();
+        $middleware = new RequestLoggerMiddleware;
         $request = Request::create('/api/users', 'GET');
         $request->headers->set('X-Request-ID', 'custom-request-id');
         $response = new Response('OK', 200);
@@ -65,7 +65,7 @@ class RequestLoggerMiddlewareTest extends FrameworkCoreTestCase
 
     public function test_middleware_excludes_health_endpoint(): void
     {
-        $middleware = new RequestLoggerMiddleware();
+        $middleware = new RequestLoggerMiddleware;
         $request = Request::create('/api/health', 'GET');
         $response = new Response('OK', 200);
 

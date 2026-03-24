@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 class InputSanitizationMiddleware
 {
     protected InputSanitizer $sanitizer;
+
     protected SecurityLogger $logger;
 
     public function __construct(InputSanitizer $sanitizer, SecurityLogger $logger)
@@ -101,7 +102,7 @@ class InputSanitizationMiddleware
             return str_repeat('*', strlen($value));
         }
 
-        return substr($value, 0, 4) . str_repeat('*', strlen($value) - 8) . substr($value, -4);
+        return substr($value, 0, 4).str_repeat('*', strlen($value) - 8).substr($value, -4);
     }
 
     protected function addSanitizationHeaders(Response $response): Response

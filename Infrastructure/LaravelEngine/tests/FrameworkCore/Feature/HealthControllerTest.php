@@ -3,15 +3,17 @@
 namespace Tests\FrameworkCore\Feature;
 
 use Illuminate\Http\JsonResponse;
+use Infrastructure\FrameworkCore\Contracts\Health\HealthCheckInterface;
 use Infrastructure\FrameworkCore\Contracts\Health\HealthCheckResult;
 use Infrastructure\FrameworkCore\Http\Controllers\HealthController;
 use Infrastructure\FrameworkCore\Services\Health\HealthCheckService;
-use Tests\FrameworkCore\FrameworkCoreTestCase;
 use Mockery;
+use Tests\FrameworkCore\FrameworkCoreTestCase;
 
 class HealthControllerTest extends FrameworkCoreTestCase
 {
     protected $healthService;
+
     protected HealthController $controller;
 
     protected function setUp(): void
@@ -147,8 +149,8 @@ class HealthControllerTest extends FrameworkCoreTestCase
 
     public function test_critical_only_checks(): void
     {
-        $criticalCheck = Mockery::mock(\Infrastructure\FrameworkCore\Contracts\Health\HealthCheckInterface::class);
-        
+        $criticalCheck = Mockery::mock(HealthCheckInterface::class);
+
         $this->healthService
             ->shouldReceive('runAll')
             ->once()

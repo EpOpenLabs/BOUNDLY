@@ -24,10 +24,10 @@ class StorageHealthCheck implements HealthCheckInterface
     {
         try {
             $start = microtime(true);
-            
+
             $disk = Storage::disk();
-            $testFile = 'health_check_' . uniqid() . '.tmp';
-            $testContent = 'test_' . time();
+            $testFile = 'health_check_'.uniqid().'.tmp';
+            $testContent = 'test_'.time();
 
             $disk->put($testFile, $testContent);
             $retrieved = $disk->get($testFile);
@@ -44,7 +44,7 @@ class StorageHealthCheck implements HealthCheckInterface
                 'driver' => config('filesystems.default', 'local'),
             ]);
         } catch (\Exception $e) {
-            return HealthCheckResult::unhealthy('Storage check failed: ' . $e->getMessage(), [
+            return HealthCheckResult::unhealthy('Storage check failed: '.$e->getMessage(), [
                 'driver' => config('filesystems.default', 'unknown'),
             ]);
         }

@@ -6,7 +6,6 @@ namespace Infrastructure\FrameworkCore\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Infrastructure\FrameworkCore\Attributes\Security\ApiKey as ApiKeyAttribute;
 use Infrastructure\FrameworkCore\Contracts\Authentication\ApiKeyProviderInterface;
 use Infrastructure\FrameworkCore\Services\SecurityLogger;
 use Symfony\Component\HttpFoundation\Response;

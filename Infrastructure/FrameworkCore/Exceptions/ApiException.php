@@ -11,6 +11,7 @@ use Throwable;
 class ApiException extends Exception
 {
     protected ErrorCode $errorCode;
+
     protected array $details;
 
     public function __construct(

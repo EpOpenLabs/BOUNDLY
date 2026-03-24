@@ -24,7 +24,7 @@ class ApiExceptionTest extends TestCase
     public function test_exception_with_details(): void
     {
         $details = ['field' => 'email', 'reason' => 'required'];
-        
+
         $exception = new ApiException(
             'Validation failed',
             ErrorCode::VALIDATION_FAILED,

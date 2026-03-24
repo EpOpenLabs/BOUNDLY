@@ -9,7 +9,7 @@ class ApiKeyAttributeTest extends TestCase
 {
     public function test_default_values(): void
     {
-        $attr = new ApiKey();
+        $attr = new ApiKey;
 
         $this->assertEquals('X-Api-Key', $attr->header);
         $this->assertEquals([], $attr->scopes);

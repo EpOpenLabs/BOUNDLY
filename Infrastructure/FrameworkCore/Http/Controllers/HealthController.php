@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Infrastructure\FrameworkCore\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Infrastructure\FrameworkCore\Enums\ErrorCode;
 use Infrastructure\FrameworkCore\Services\Health\HealthCheckService;
 use Infrastructure\FrameworkCore\Traits\ApiResponse;
 
@@ -19,7 +20,7 @@ class HealthController
     public function check(): JsonResponse
     {
         $detailed = request()->query('detailed');
-        
+
         if ($detailed) {
             return $this->detailedHealthCheck();
         }
@@ -40,7 +41,7 @@ class HealthController
 
         return $this->error(
             'Service is unhealthy',
-            \Infrastructure\FrameworkCore\Enums\ErrorCode::SERVICE_UNAVAILABLE,
+            ErrorCode::SERVICE_UNAVAILABLE,
             503,
             ['status' => 'unhealthy']
         );
@@ -106,7 +107,7 @@ class HealthController
 
         return $this->error(
             'Service is not ready',
-            \Infrastructure\FrameworkCore\Enums\ErrorCode::SERVICE_UNAVAILABLE,
+            ErrorCode::SERVICE_UNAVAILABLE,
             503,
             ['status' => 'not_ready']
         );

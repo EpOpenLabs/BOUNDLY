@@ -62,17 +62,17 @@ class RequestSizeLimitMiddleware
     protected function formatBytes(int|float $bytes): string
     {
         if ($bytes >= 1024 * 1024 * 1024) {
-            return round($bytes / (1024 * 1024 * 1024), 2) . ' GB';
+            return round($bytes / (1024 * 1024 * 1024), 2).' GB';
         }
 
         if ($bytes >= 1024 * 1024) {
-            return round($bytes / (1024 * 1024), 2) . ' MB';
+            return round($bytes / (1024 * 1024), 2).' MB';
         }
 
         if ($bytes >= 1024) {
-            return round($bytes / 1024, 2) . ' KB';
+            return round($bytes / 1024, 2).' KB';
         }
 
-        return $bytes . ' B';
+        return $bytes.' B';
     }
 }

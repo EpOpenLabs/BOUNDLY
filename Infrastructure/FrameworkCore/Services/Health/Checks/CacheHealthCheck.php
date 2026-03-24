@@ -24,8 +24,8 @@ class CacheHealthCheck implements HealthCheckInterface
     {
         try {
             $start = microtime(true);
-            $testKey = 'health_check_' . uniqid();
-            $testValue = 'test_' . time();
+            $testKey = 'health_check_'.uniqid();
+            $testValue = 'test_'.time();
 
             Cache::put($testKey, $testValue, 10);
             $retrieved = Cache::get($testKey);
@@ -42,7 +42,7 @@ class CacheHealthCheck implements HealthCheckInterface
                 'driver' => $this->getDriverName(),
             ]);
         } catch (\Exception $e) {
-            return HealthCheckResult::unhealthy('Cache check failed: ' . $e->getMessage());
+            return HealthCheckResult::unhealthy('Cache check failed: '.$e->getMessage());
         }
     }
 
@@ -50,6 +50,7 @@ class CacheHealthCheck implements HealthCheckInterface
     {
         try {
             $driver = config('cache.default', 'file');
+
             return $driver;
         } catch (\Exception $e) {
             return 'unknown';

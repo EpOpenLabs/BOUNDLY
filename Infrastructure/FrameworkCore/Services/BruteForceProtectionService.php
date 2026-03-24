@@ -10,7 +10,9 @@ use Illuminate\Http\Request;
 class BruteForceProtectionService
 {
     protected array $config;
+
     protected RateLimiter $limiter;
+
     protected SecurityLogger $logger;
 
     public function __construct(RateLimiter $limiter, SecurityLogger $logger, ?array $config = null)

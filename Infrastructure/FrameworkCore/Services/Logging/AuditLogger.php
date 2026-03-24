@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Log;
 class AuditLogger
 {
     protected string $channel;
+
     protected bool $enabled;
+
     protected array $auditableEvents;
 
     public function __construct()

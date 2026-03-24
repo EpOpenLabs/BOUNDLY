@@ -12,7 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 class RequestLoggerMiddleware
 {
     protected string $channel;
+
     protected bool $enabled;
+
     protected array $excludePaths;
 
     public function __construct()
@@ -31,7 +33,7 @@ class RequestLoggerMiddleware
 
         $startTime = microtime(true);
         $requestId = $request->header('X-Request-ID', uniqid('req_'));
-        
+
         $request->headers->set('X-Request-ID', $requestId);
 
         $response = $next($request);
@@ -41,7 +43,7 @@ class RequestLoggerMiddleware
         $this->logRequest($request, $response, $requestId, $duration);
 
         $response->headers->set('X-Request-ID', $requestId);
-        $response->headers->set('X-Response-Time', round($duration, 2) . 'ms');
+        $response->headers->set('X-Response-Time', round($duration, 2).'ms');
 
         return $response;
     }

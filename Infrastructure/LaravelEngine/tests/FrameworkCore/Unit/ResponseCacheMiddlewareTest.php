@@ -11,13 +11,13 @@ class ResponseCacheMiddlewareTest extends FrameworkCoreTestCase
 {
     public function test_middleware_can_be_instantiated(): void
     {
-        $middleware = new ResponseCacheMiddleware();
+        $middleware = new ResponseCacheMiddleware;
         $this->assertInstanceOf(ResponseCacheMiddleware::class, $middleware);
     }
 
     public function test_middleware_passes_non_get_requests_through(): void
     {
-        $middleware = new ResponseCacheMiddleware();
+        $middleware = new ResponseCacheMiddleware;
         $request = Request::create('/api/users', 'POST');
         $response = new Response('Created', 201);
 
@@ -32,7 +32,7 @@ class ResponseCacheMiddlewareTest extends FrameworkCoreTestCase
 
     public function test_middleware_adds_cache_headers_on_success(): void
     {
-        $middleware = new ResponseCacheMiddleware();
+        $middleware = new ResponseCacheMiddleware;
         $request = Request::create('/api/users', 'GET');
         $response = new Response('OK', 200);
 
@@ -47,7 +47,7 @@ class ResponseCacheMiddlewareTest extends FrameworkCoreTestCase
 
     public function test_build_cache_key_generates_consistent_keys(): void
     {
-        $middleware = new ResponseCacheMiddleware();
+        $middleware = new ResponseCacheMiddleware;
         $request = Request::create('/api/users?page=1&per_page=10', 'GET');
 
         $reflection = new \ReflectionClass($middleware);

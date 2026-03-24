@@ -24,10 +24,10 @@ class DatabaseHealthCheck implements HealthCheckInterface
     {
         try {
             $start = microtime(true);
-            
+
             DB::connection()->getPdo();
             DB::select('SELECT 1');
-            
+
             $latency = round((microtime(true) - $start) * 1000, 2);
 
             return HealthCheckResult::healthy('Database connection is healthy', [
@@ -35,7 +35,7 @@ class DatabaseHealthCheck implements HealthCheckInterface
                 'driver' => DB::connection()->getDriverName(),
             ]);
         } catch (\Exception $e) {
-            return HealthCheckResult::unhealthy('Database connection failed: ' . $e->getMessage(), [
+            return HealthCheckResult::unhealthy('Database connection failed: '.$e->getMessage(), [
                 'driver' => $this->getDriverName(),
             ]);
         }

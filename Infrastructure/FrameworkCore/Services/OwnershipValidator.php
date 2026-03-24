@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Infrastructure\FrameworkCore\Services;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Infrastructure\FrameworkCore\Attributes\Behavior\Ownership;
 
@@ -22,7 +23,7 @@ class OwnershipValidator
         ?Ownership $ownership = null,
         ?string $userId = null
     ): bool {
-        $ownership = $ownership ?? new Ownership();
+        $ownership = $ownership ?? new Ownership;
         $userId = $userId ?? $user->getAuthIdentifier();
 
         if ($this->isAdmin($user) && $ownership->allowsAdminBypass()) {
@@ -55,7 +56,7 @@ class OwnershipValidator
         ?Ownership $ownership = null
     ): void {
         if (! $this->validate($user, $resource, $ownership)) {
-            throw new \Illuminate\Auth\Access\AuthorizationException(
+            throw new AuthorizationException(
                 'You do not have permission to access this resource.'
             );
         }
@@ -97,7 +98,7 @@ class OwnershipValidator
             return $resource->{$ownerField};
         }
 
-        $getter = 'get' . ucfirst($ownerField);
+        $getter = 'get'.ucfirst($ownerField);
         if (method_exists($resource, $getter)) {
             return $resource->{$getter}();
         }

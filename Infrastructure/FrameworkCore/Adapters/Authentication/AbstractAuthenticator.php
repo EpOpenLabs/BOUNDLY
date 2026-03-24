@@ -2,7 +2,6 @@
 
 namespace Infrastructure\FrameworkCore\Adapters\Authentication;
 
-use Illuminate\Contracts\Auth\Authenticatable;
 use Infrastructure\FrameworkCore\Contracts\Authentication\AuthenticatorInterface;
 
 abstract class AbstractAuthenticator implements AuthenticatorInterface

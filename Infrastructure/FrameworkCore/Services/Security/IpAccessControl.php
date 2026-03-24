@@ -10,9 +10,13 @@ use Illuminate\Support\Facades\Cache;
 class IpAccessControl
 {
     protected bool $enabled;
+
     protected array $whitelist;
+
     protected array $blacklist;
+
     protected string $defaultAction;
+
     protected string $cacheStore;
 
     public function __construct()
@@ -152,7 +156,7 @@ class IpAccessControl
 
     protected function ipMatchesWildcard(string $ip, string $pattern): bool
     {
-        $regex = '/^' . str_replace(['.', '*'], ['\\.', '.*'], $pattern) . '$/';
+        $regex = '/^'.str_replace(['.', '*'], ['\\.', '.*'], $pattern).'$/';
 
         return (bool) preg_match($regex, $ip);
     }

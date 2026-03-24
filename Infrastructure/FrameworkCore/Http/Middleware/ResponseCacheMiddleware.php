@@ -12,7 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
 class ResponseCacheMiddleware
 {
     protected string $store;
+
     protected int $ttl;
+
     protected array $excludePaths;
 
     public function __construct()

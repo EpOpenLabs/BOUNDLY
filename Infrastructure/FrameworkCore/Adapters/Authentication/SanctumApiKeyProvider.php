@@ -3,7 +3,6 @@
 namespace Infrastructure\FrameworkCore\Adapters\Authentication;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Hash;
 use Infrastructure\FrameworkCore\Contracts\Authentication\ApiKeyProviderInterface;
 
 class SanctumApiKeyProvider implements ApiKeyProviderInterface

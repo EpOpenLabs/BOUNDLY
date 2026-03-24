@@ -9,7 +9,7 @@ class OwnershipAttributeTest extends TestCase
 {
     public function test_default_values(): void
     {
-        $attr = new Ownership();
+        $attr = new Ownership;
 
         $this->assertEquals('user_id', $attr->getOwnerField());
         $this->assertTrue($attr->allowsAdminBypass());

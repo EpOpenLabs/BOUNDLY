@@ -10,14 +10,14 @@ class SecurityLoggerTest extends TestCase
 {
     public function test_logger_is_enabled_by_default(): void
     {
-        $logger = new SecurityLogger();
+        $logger = new SecurityLogger;
 
         $this->assertTrue($logger->isEnabled());
     }
 
     public function test_logger_can_be_disabled(): void
     {
-        $logger = new SecurityLogger();
+        $logger = new SecurityLogger;
         $logger->setEnabled(false);
 
         $this->assertFalse($logger->isEnabled());
@@ -25,7 +25,7 @@ class SecurityLoggerTest extends TestCase
 
     public function test_logger_can_be_re_enabled(): void
     {
-        $logger = new SecurityLogger();
+        $logger = new SecurityLogger;
         $logger->setEnabled(false);
         $logger->setEnabled(true);
 
@@ -34,7 +34,7 @@ class SecurityLoggerTest extends TestCase
 
     public function test_log_method_does_not_throw_when_disabled(): void
     {
-        $logger = new SecurityLogger();
+        $logger = new SecurityLogger;
         $logger->setEnabled(false);
 
         $logger->log(SecurityEvent::LOGIN_FAILED, null, '127.0.0.1');
@@ -44,7 +44,7 @@ class SecurityLoggerTest extends TestCase
 
     public function test_convenience_methods_exist(): void
     {
-        $logger = new SecurityLogger();
+        $logger = new SecurityLogger;
 
         $this->assertTrue(method_exists($logger, 'logLoginSuccess'));
         $this->assertTrue(method_exists($logger, 'logLoginFailed'));

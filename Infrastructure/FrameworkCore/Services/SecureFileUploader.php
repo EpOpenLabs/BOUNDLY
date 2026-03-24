@@ -5,23 +5,24 @@ declare(strict_types=1);
 namespace Infrastructure\FrameworkCore\Services;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Infrastructure\FrameworkCore\Attributes\Validation\SecureUpload;
-use Infrastructure\FrameworkCore\Services\InputSanitizer;
 
 class SecureFileUploader
 {
     protected InputSanitizer $sanitizer;
+
     protected array $config;
 
     public function __construct(?InputSanitizer $sanitizer = null)
     {
-        $this->sanitizer = $sanitizer ?? new InputSanitizer();
+        $this->sanitizer = $sanitizer ?? new InputSanitizer;
         $this->config = config('boundly.security', []);
     }
 
     public function upload(UploadedFile $file, ?SecureUpload $attribute = null, ?string $path = 'uploads'): array
     {
-        $attribute = $attribute ?? new SecureUpload();
+        $attribute = $attribute ?? new SecureUpload;
         $config = $this->getMergedConfig($attribute);
 
         $this->validateFile($file, $config);
@@ -66,7 +67,7 @@ class SecureFileUploader
 
         if (! in_array($mimeType, $allowedTypes, true)) {
             throw new \InvalidArgumentException(
-                "File mime type '{$mimeType}' is not allowed. Allowed types: " . implode(', ', $allowedTypes)
+                "File mime type '{$mimeType}' is not allowed. Allowed types: ".implode(', ', $allowedTypes)
             );
         }
     }
@@ -83,7 +84,7 @@ class SecureFileUploader
 
         if (! in_array($extension, $allowedMimes, true)) {
             throw new \InvalidArgumentException(
-                "File extension '{$extension}' is not allowed. Allowed extensions: " . implode(', ', $allowedMimes)
+                "File extension '{$extension}' is not allowed. Allowed extensions: ".implode(', ', $allowedMimes)
             );
         }
     }
@@ -134,8 +135,8 @@ class SecureFileUploader
     {
         $disk = $disk ?? 'local';
 
-        if (class_exists(\Illuminate\Support\Facades\Storage::class)) {
-            return \Illuminate\Support\Facades\Storage::disk($disk)->delete($path);
+        if (class_exists(Storage::class)) {
+            return Storage::disk($disk)->delete($path);
         }
 
         return false;

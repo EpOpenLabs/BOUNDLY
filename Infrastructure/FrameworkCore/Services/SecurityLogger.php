@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Infrastructure\FrameworkCore\Services;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Infrastructure\FrameworkCore\Enums\LogLevel;
 use Infrastructure\FrameworkCore\Enums\SecurityEvent;
 
 class SecurityLogger
 {
     protected array $config;
+
     protected bool $enabled;
+
     protected string $channel;
+
     protected array $excludedEvents;
 
     public function __construct(?array $config = null)
@@ -40,7 +43,7 @@ class SecurityLogger
         ?Request $request = null,
         array $context = []
     ): void {
-        if (!$this->enabled || $this->isExcluded($event)) {
+        if (! $this->enabled || $this->isExcluded($event)) {
             return;
         }
 

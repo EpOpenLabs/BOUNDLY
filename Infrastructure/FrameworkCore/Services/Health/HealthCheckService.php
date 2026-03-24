@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Infrastructure\FrameworkCore\Services\Health;
 
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Storage;
 use Infrastructure\FrameworkCore\Contracts\Health\HealthCheckInterface;
 use Infrastructure\FrameworkCore\Contracts\Health\HealthCheckResult;
 use Infrastructure\FrameworkCore\Services\Health\Checks\CacheHealthCheck;
@@ -19,6 +15,7 @@ use Infrastructure\FrameworkCore\Services\Health\Checks\StorageHealthCheck;
 class HealthCheckService
 {
     protected array $checks = [];
+
     protected array $config;
 
     public function __construct()
@@ -33,19 +30,19 @@ class HealthCheckService
         $services = $this->config['services'] ?? [];
 
         if ($services['database'] ?? true) {
-            $this->register(new DatabaseHealthCheck());
+            $this->register(new DatabaseHealthCheck);
         }
 
         if ($services['cache'] ?? true) {
-            $this->register(new CacheHealthCheck());
+            $this->register(new CacheHealthCheck);
         }
 
         if ($services['queue'] ?? true) {
-            $this->register(new QueueHealthCheck());
+            $this->register(new QueueHealthCheck);
         }
 
         if ($services['storage'] ?? true) {
-            $this->register(new StorageHealthCheck());
+            $this->register(new StorageHealthCheck);
         }
     }
 
@@ -55,7 +52,7 @@ class HealthCheckService
 
         foreach ($customClasses as $class) {
             if (is_string($class) && class_exists($class)) {
-                $instance = new $class();
+                $instance = new $class;
                 if ($instance instanceof HealthCheckInterface) {
                     $this->register($instance);
                 }
@@ -85,9 +82,10 @@ class HealthCheckService
         try {
             $start = microtime(true);
             $result = $this->executeWithTimeout($check, $timeout);
+
             return $result;
         } catch (\Exception $e) {
-            Log::warning("Health check '{$name}' failed: " . $e->getMessage());
+            Log::warning("Health check '{$name}' failed: ".$e->getMessage());
 
             return HealthCheckResult::unhealthy($e->getMessage());
         }

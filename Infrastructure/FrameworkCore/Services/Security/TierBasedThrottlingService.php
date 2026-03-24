@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 class TierBasedThrottlingService
 {
     protected array $tiers;
+
     protected string $cacheStore;
 
     public function __construct()
@@ -124,15 +125,15 @@ class TierBasedThrottlingService
     {
         $apiKey = $request->header('X-API-Key');
         if ($apiKey) {
-            return 'api_key:' . substr($apiKey, 0, 8);
+            return 'api_key:'.substr($apiKey, 0, 8);
         }
 
         $userId = $request->header('X-User-ID');
         if ($userId) {
-            return 'user:' . $userId;
+            return 'user:'.$userId;
         }
 
-        return 'ip:' . $request->ip();
+        return 'ip:'.$request->ip();
     }
 
     public function resetLimit(Request $request): void

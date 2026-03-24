@@ -80,7 +80,7 @@ trait ApiResponse
         ], 422);
     }
 
-    protected function unauthorized(string $message = null): JsonResponse
+    protected function unauthorized(?string $message = null): JsonResponse
     {
         return $this->error(
             $message ?? __('core::messages.unauthenticated'),
@@ -89,7 +89,7 @@ trait ApiResponse
         );
     }
 
-    protected function forbidden(string $message = null): JsonResponse
+    protected function forbidden(?string $message = null): JsonResponse
     {
         return $this->error(
             $message ?? __('core::messages.unauthorized'),

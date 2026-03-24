@@ -7,10 +7,15 @@ namespace Infrastructure\FrameworkCore\Services;
 class InputSanitizer
 {
     protected array $config;
+
     protected bool $enabled;
+
     protected bool $stripHtml;
+
     protected bool $stripScripts;
+
     protected bool $escapeSqlWildcards;
+
     protected array $allowedTags;
 
     public function __construct(?array $config = null)
@@ -58,7 +63,7 @@ class InputSanitizer
 
     public function sanitize(string $input): string
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return $input;
         }
 
@@ -74,7 +79,7 @@ class InputSanitizer
 
     public function sanitizeHtml(string $input): string
     {
-        if (!$this->enabled || !$this->stripHtml) {
+        if (! $this->enabled || ! $this->stripHtml) {
             return $input;
         }
 
@@ -82,14 +87,14 @@ class InputSanitizer
             return strip_tags($input);
         }
 
-        $tags = '<' . implode('><', $this->allowedTags) . '>';
+        $tags = '<'.implode('><', $this->allowedTags).'>';
 
         return strip_tags($input, $tags);
     }
 
     public function sanitizeJavascript(string $input): string
     {
-        if (!$this->enabled || !$this->stripScripts) {
+        if (! $this->enabled || ! $this->stripScripts) {
             return $input;
         }
 
@@ -110,7 +115,7 @@ class InputSanitizer
 
     public function sanitizeSqlWildcards(string $input): string
     {
-        if (!$this->enabled || !$this->escapeSqlWildcards) {
+        if (! $this->enabled || ! $this->escapeSqlWildcards) {
             return $input;
         }
 

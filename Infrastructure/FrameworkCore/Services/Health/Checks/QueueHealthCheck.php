@@ -24,9 +24,9 @@ class QueueHealthCheck implements HealthCheckInterface
     {
         try {
             $start = microtime(true);
-            
+
             Queue::size('default');
-            
+
             $latency = round((microtime(true) - $start) * 1000, 2);
 
             return HealthCheckResult::healthy('Queue is healthy', [
@@ -34,7 +34,7 @@ class QueueHealthCheck implements HealthCheckInterface
                 'driver' => config('queue.default', 'sync'),
             ]);
         } catch (\Exception $e) {
-            return HealthCheckResult::unhealthy('Queue check failed: ' . $e->getMessage(), [
+            return HealthCheckResult::unhealthy('Queue check failed: '.$e->getMessage(), [
                 'driver' => config('queue.default', 'unknown'),
             ]);
         }

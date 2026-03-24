@@ -2,9 +2,9 @@
 
 namespace Tests\FrameworkCore\Unit;
 
+use Illuminate\Cache\RateLimiter;
 use Infrastructure\FrameworkCore\Services\BruteForceProtectionService;
 use Infrastructure\FrameworkCore\Services\SecurityLogger;
-use Illuminate\Cache\RateLimiter;
 use PHPUnit\Framework\TestCase;
 
 class BruteForceProtectionServiceTest extends TestCase
