@@ -14,6 +14,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.0-alpha] - 2026-03-24
+
+> 🚀 Production Readiness & Advanced Security Features.
+
+### Added
+
+#### Exception Handler & API Response Format
+- **`ApiException`**: Base exception class with error codes, HTTP status, and details
+- **`ErrorCode` enum**: 20 standardized error codes (SERVICE_UNAVAILABLE, TIER_LIMIT_EXCEEDED, etc.)
+- **`ApiResponse` trait**: Opt-in unified JSON response format with `success()`, `created()`, `error()`, etc.
+- **`GenericApiController`**: Now uses ApiResponse trait for consistent responses
+- **`DELETE` endpoint**: Fixed to return 204 No Content instead of 200
+
+#### Transactional Attribute
+- **`#[Transactional]` attribute**: Declares an entity requires atomic database operations
+- **`DynamicRepository`**: Automatically wraps insert/update/delete in transactions when entity is marked transactional
+
+#### Health Checks
+- **`HealthCheckInterface`**: Contract for custom health check implementations
+- **`HealthCheckResult`**: Value object with `healthy`, `message`, `metadata`, and `durationMs`
+- **`HealthCheckService`**: Orchestrates multiple health checks with timeout support
+- **`DatabaseHealthCheck`**: Verifies database connectivity
+- **`CacheHealthCheck`**: Verifies cache (Redis/file) connectivity
+- **`QueueHealthCheck`**: Verifies queue worker connectivity
+- **`StorageHealthCheck`**: Verifies storage (local/S3) connectivity
+- **`HealthController`**: Endpoints at `/health`, `/health/detailed`, `/health/liveness`, `/health/readiness`
+
+#### Structured Logging
+- **`StructuredLogger`**: Fluent logging with context builders
+- **`RequestLogBuilder`**: Logs with request context (ID, method, path, IP, user agent)
+- **`UserLogBuilder`**: Logs with user context
+- **`ContextLogBuilder`**: Logs with custom context
+- **`AuditLogger`**: CRUD audit trail with change tracking
+- **`RequestLoggerMiddleware`**: Auto-logs HTTP requests with X-Request-ID and X-Response-Time headers
+
+#### Database Timeouts
+- **`DatabaseTimeoutManager`**: Configurable timeouts per operation (select, insert, update, delete, bulk, migration)
+- **Config**: `boundly.database_timeouts` with sensible defaults
+
+#### Response Cache
+- **`ResponseCacheMiddleware`**: Caches GET responses with X-Cache header (HIT/MISS)
+- **Config**: `boundly.cache.response` with store, TTL, and exclude paths
+
+#### IP Access Control
+- **`IpAccessControl`**: Whitelist/blacklist with CIDR, wildcard, and exact IP matching
+- **`IpAccessMiddleware`**: Blocks requests from restricted IPs with 403 response
+
+#### Request Signing (HMAC)
+- **`RequestSigningService`**: HMAC-SHA256 request signature verification
+- **`RequestSigningMiddleware`**: Validates X-Signature header with timestamp tolerance
+- **Config**: `boundly.security.request_signing` with algorithm and secret key
+
+#### Tier-based Throttling
+- **`TierBasedThrottlingService`**: Four tiers (free/basic/pro/enterprise) with per-minute/hour/day limits
+- **`TierThrottleMiddleware`**: Applies tier limits with X-RateLimit headers
+- **Config**: `boundly.security.tier_throttling` with customizable limits
+
+### Security Features
+- Input sanitization middleware with XSS/SQLi detection
+- Brute force protection with progressive lockout
+- API key authentication with scope verification
+- Object-level authorization (BOLA/IDOR protection)
+- Secure file upload validation
+- JSON Schema validation
+
+### Quality Assurance
+- **218 passing tests** (up from 142)
+- **PHPStan Level 5** with 0 errors
+
+---
+
 ## [0.6.0-alpha] - 2026-03-23
 
 > 📡 Agnostic WebSockets Bridge & Composite Action Routing.

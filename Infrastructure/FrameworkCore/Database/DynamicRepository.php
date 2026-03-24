@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Infrastructure\FrameworkCore\Attributes\Behavior\Transactional;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Infrastructure\FrameworkCore\Traits\ChecksPermissions;
 use Infrastructure\FrameworkCore\Validation\EntityValidator;
@@ -16,6 +17,7 @@ use Infrastructure\FrameworkCore\Validation\EntityValidator;
  * - Cursor-based pagination (scalable for large datasets)
  * - Extended filter operators (_like, _gt, _lt, _gte, _lte, _not, _in, _null)
  * - OR filter grouping (?or[name_like]=john&or[email_like]=john)
+ * - Transactional support via #[Transactional] attribute
  */
 class DynamicRepository
 {
@@ -41,6 +43,39 @@ class DynamicRepository
         }
 
         return $config;
+    }
+
+    /**
+     * Checks if the entity is marked with the #[Transactional] attribute.
+     */
+    protected function isTransactional(array $config): bool
+    {
+        if (! isset($config['class'])) {
+            return false;
+        }
+
+        $reflection = new \ReflectionClass($config['class']);
+        
+        return $reflection->getAttributes(Transactional::class) !== [];
+    }
+
+    /**
+     * Gets the Transactional attribute configuration for an entity.
+     */
+    protected function getTransactionalConfig(array $config): ?Transactional
+    {
+        if (! isset($config['class'])) {
+            return null;
+        }
+
+        $reflection = new \ReflectionClass($config['class']);
+        $attributes = $reflection->getAttributes(Transactional::class);
+
+        if (empty($attributes)) {
+            return null;
+        }
+
+        return $attributes[0]->newInstance();
     }
 
     /**
@@ -608,8 +643,19 @@ class DynamicRepository
 
     public function insert(string $resource, array $data, array $includes = [])
     {
-        error_log("DynamicRepository::insert - Resource: {$resource}");
         $config = $this->resolveConfig($resource);
+
+        if ($this->isTransactional($config)) {
+            return DB::transaction(function () use ($resource, $data, $includes, $config) {
+                return $this->doInsert($resource, $data, $includes, $config);
+            });
+        }
+
+        return $this->doInsert($resource, $data, $includes, $config);
+    }
+
+    protected function doInsert(string $resource, array $data, array $includes, array $config): array
+    {
         $userIdentifier = request()->header('X-User-ID') ?? 'System';
 
         if ($config['tenantAware'] && request()->hasHeader('X-Tenant-ID')) {
@@ -624,12 +670,10 @@ class DynamicRepository
         $data['created_at'] = now()->toDateTimeString();
         $data['updated_at'] = now()->toDateTimeString();
 
-        // 1. Extract relationship data before inserting parent
         $manyToManyData = [];
         $hasRelData = [];
         $morphRelData = [];
 
-        // ManyToMany
         foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
             if (isset($data[$relName])) {
                 $manyToManyData[$relName] = ['attr' => $relAttr, 'ids' => $data[$relName]];
@@ -637,7 +681,6 @@ class DynamicRepository
             }
         }
 
-        // HasMany / HasOne
         foreach (array_merge($config['hasMany'] ?? [], $config['hasOne'] ?? []) as $relName => $relAttr) {
             if (isset($data[$relName])) {
                 $hasRelData[$relName] = ['attr' => $relAttr, 'data' => $data[$relName]];
@@ -652,19 +695,13 @@ class DynamicRepository
             }
         }
 
-        // --- Important: Sanitize data for the actual DB insert (keep only columns) ---
         $insertData = $this->validator->sanitize($data, $config);
-
         $id = DB::table($config['table'])->insertGetId($insertData);
 
-        // 2. Process Nested Relations
-
-        // ManyToMany Pivot Sync
         foreach ($manyToManyData as $relName => $relInfo) {
             $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
         }
 
-        // HasRel (Standard FK)
         foreach ($hasRelData as $relName => $relInfo) {
             $attr = $relInfo['attr'];
             $items = is_array($relInfo['data']) && ! isset($relInfo['data'][0]) ? [$relInfo['data']] : $relInfo['data'];
@@ -678,7 +715,6 @@ class DynamicRepository
             }
         }
 
-        // MorphRel (Polymorphic FK)
         foreach ($morphRelData as $relName => $relInfo) {
             $attr = $relInfo['attr'];
             $items = is_array($relInfo['data']) && ! isset($relInfo['data'][0]) ? [$relInfo['data']] : $relInfo['data'];
@@ -702,6 +738,18 @@ class DynamicRepository
     public function update(string $resource, $id, array $data, array $includes = [])
     {
         $config = $this->resolveConfig($resource);
+
+        if ($this->isTransactional($config)) {
+            return DB::transaction(function () use ($resource, $id, $data, $includes, $config) {
+                return $this->doUpdate($resource, $id, $data, $includes, $config);
+            });
+        }
+
+        return $this->doUpdate($resource, $id, $data, $includes, $config);
+    }
+
+    protected function doUpdate(string $resource, $id, array $data, array $includes, array $config): array
+    {
         $userIdentifier = request()->header('X-User-ID') ?? 'System';
 
         if ($config['auditable']) {
@@ -710,7 +758,6 @@ class DynamicRepository
 
         $data['updated_at'] = now()->toDateTimeString();
 
-        // 1. Extract ManyToMany IDs from payload before updating
         $manyToManyData = [];
         foreach ($config['manyToMany'] ?? [] as $relName => $relAttr) {
             if (array_key_exists($relName, $data)) {
@@ -723,7 +770,6 @@ class DynamicRepository
             DB::table($config['table'])->where($config['primaryKey'], $id)->update($data);
         }
 
-        // 2. Sync ManyToMany Pivot Tables
         foreach ($manyToManyData as $relName => $relInfo) {
             $this->syncManyToMany($config, $id, $relInfo['attr'], $relInfo['ids']);
         }

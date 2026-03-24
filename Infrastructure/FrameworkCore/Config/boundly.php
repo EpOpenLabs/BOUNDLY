@@ -171,4 +171,42 @@ return [
         'log_brute_force' => true,
         'log_api_keys' => true,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Response Format
+    |--------------------------------------------------------------------------
+    | Configure the unified API response format.
+    | When enabled, all responses follow a consistent structure.
+    |
+    | Example response:
+    | {
+    |   "success": true,
+    |   "data": {...},
+    |   "meta": {
+    |     "timestamp": "2026-03-24T12:00:00Z",
+    |     "request_id": "uuid",
+    |     "response_time_ms": 45
+    |   },
+    |   "error": null
+    | }
+    */
+    'api' => [
+        'response_format' => [
+            'enabled' => env('BOUNDLY_RESPONSE_FORMAT', false),
+            'include_timestamp' => env('BOUNDLY_INCLUDE_TIMESTAMP', true),
+            'include_request_id' => env('BOUNDLY_INCLUDE_REQUEST_ID', true),
+            'include_debug' => env('BOUNDLY_INCLUDE_DEBUG', false),
+        ],
+
+        'error_codes' => [
+            'ERR_RESOURCE_NOT_FOUND' => 404,
+            'ERR_RESOURCE_NOT_DEFINED' => 404,
+            'ERR_VALIDATION_FAILED' => 422,
+            'ERR_UNAUTHORIZED' => 401,
+            'ERR_FORBIDDEN' => 403,
+            'ERR_RATE_LIMITED' => 429,
+            'ERR_SERVER_ERROR' => 500,
+        ],
+    ],
 ];
