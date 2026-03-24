@@ -14,37 +14,15 @@ class UserApiTest extends BoundlyTestCase
         // $this->withoutMiddleware(\Infrastructure\FrameworkCore\Http\Middleware\ResourceAuthorize::class);
 
         $response = $this->getJson('/api/users');
-        
+
         $response->assertStatus(200)
-                 ->assertJsonStructure(['data']);
+            ->assertJsonStructure(['data']);
     }
 
     /**
      * Test mapping to POST /api/users
      */
     public function test_can_create_item()
-    {
-        // $this->withoutMiddleware(\Infrastructure\FrameworkCore\Http\Middleware\ResourceAuthorize::class);
-
-        $payload = [
-'name' => 'Test String',
-            'email' => 'test@example.com',
-            'phone' => 'Test String',
-            'addres' => 'Test String',
-            'password' => 'password',
-        ];
-
-        $response = $this->postJson('/api/users', $payload);
-        
-        $response->assertStatus(201);
-        $this->assertDatabaseHas('users', $payload);
-    }
-
-    /**
-     * Custom Action Test: CreateUser
-     * (Mapped to POST /api/users)
-     */
-    public function test_custom_action_CreateUser()
     {
         // $this->withoutMiddleware(\Infrastructure\FrameworkCore\Http\Middleware\ResourceAuthorize::class);
 
@@ -57,7 +35,29 @@ class UserApiTest extends BoundlyTestCase
         ];
 
         $response = $this->postJson('/api/users', $payload);
-        
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('users', $payload);
+    }
+
+    /**
+     * Custom Action Test: CreateUser
+     * (Mapped to POST /api/users)
+     */
+    public function test_custom_action_create_user()
+    {
+        // $this->withoutMiddleware(\Infrastructure\FrameworkCore\Http\Middleware\ResourceAuthorize::class);
+
+        $payload = [
+            'name' => 'Test String',
+            'email' => 'test@example.com',
+            'phone' => 'Test String',
+            'addres' => 'Test String',
+            'password' => 'password',
+        ];
+
+        $response = $this->postJson('/api/users', $payload);
+
         // TODO: CUSTOM ASSERTIONS for this action!
         $response->assertStatus(201);
     }

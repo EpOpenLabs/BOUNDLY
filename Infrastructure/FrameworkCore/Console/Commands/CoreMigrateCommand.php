@@ -3,10 +3,11 @@
 namespace Infrastructure\FrameworkCore\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
-use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 
 /**
  * Smart Schema Migration with:
@@ -17,7 +18,8 @@ use Illuminate\Support\Facades\DB;
  */
 class CoreMigrateCommand extends Command
 {
-    protected $signature   = 'core:migrate {--lang=en} {--dry-run : Show what would change without applying it}';
+    protected $signature = 'core:migrate {--lang=en} {--dry-run : Show what would change without applying it}';
+
     protected $description = 'Scans Domain entities and synchronizes the database schema safely.';
 
     public function __construct(protected EntityRegistry $registry)
@@ -41,34 +43,36 @@ class CoreMigrateCommand extends Command
 
         if (empty($entities)) {
             $this->warn(__('core::messages.no_entities_found'));
+
             return;
         }
 
         // Ensure migration history table exists
-        if (!$isDryRun) {
+        if (! $isDryRun) {
             $this->ensureMigrationTable();
         }
 
         Schema::disableForeignKeyConstraints();
 
         foreach ($entities as $resourceName => $config) {
-            $tableName   = $config['table'];
+            $tableName = $config['table'];
             $fingerprint = $this->buildFingerprint($config);
 
             // Check history: skip if nothing changed
-            if (!$isDryRun && $this->hasAlreadyMigrated($tableName, $fingerprint)) {
+            if (! $isDryRun && $this->hasAlreadyMigrated($tableName, $fingerprint)) {
                 $this->line("  <fg=gray>[SKIP]</> {$tableName} — no changes detected.");
+
                 continue;
             }
 
-            if (!Schema::hasTable($tableName)) {
+            if (! Schema::hasTable($tableName)) {
                 $this->processNewTable($tableName, $config, $isDryRun);
             } else {
                 $this->processExistingTable($tableName, $config, $isDryRun);
             }
 
             // Record migration in history
-            if (!$isDryRun) {
+            if (! $isDryRun) {
                 $this->recordMigration($tableName, $fingerprint);
             }
         }
@@ -93,6 +97,7 @@ class CoreMigrateCommand extends Command
             foreach ($config['columns'] as $colName => $colAttr) {
                 $this->line("    + {$colName} ({$colAttr->type})");
             }
+
             return;
         }
 
@@ -100,13 +105,15 @@ class CoreMigrateCommand extends Command
             $table->id($config['primaryKey']);
 
             foreach ($config['columns'] as $colName => $colAttr) {
-                if ($colName === $config['primaryKey']) continue;
+                if ($colName === $config['primaryKey']) {
+                    continue;
+                }
                 $this->addColumn($table, $colName, $colAttr);
             }
 
             foreach ($config['belongsTo'] as $relName => $relAttr) {
-                $foreignCol = $relAttr->foreignKey ?: $relName . '_id';
-                if (!isset($config['columns'][$foreignCol])) {
+                $foreignCol = $relAttr->foreignKey ?: $relName.'_id';
+                if (! isset($config['columns'][$foreignCol])) {
                     $table->foreignId($foreignCol)->nullable();
                 }
             }
@@ -136,8 +143,10 @@ class CoreMigrateCommand extends Command
 
         // Detect new columns
         foreach ($config['columns'] as $colName => $colAttr) {
-            if ($colName === $config['primaryKey']) continue;
-            if (!isset($currentColumns[$colName])) {
+            if ($colName === $config['primaryKey']) {
+                continue;
+            }
+            if (! isset($currentColumns[$colName])) {
                 $changes[] = ['op' => 'ADD', 'col' => $colName, 'attr' => $colAttr];
             } else {
                 $changes[] = ['op' => 'CHANGE', 'col' => $colName, 'attr' => $colAttr];
@@ -145,29 +154,29 @@ class CoreMigrateCommand extends Command
         }
 
         // Detect missing audit/soft-delete columns
-        if ($config['auditable'] && !isset($currentColumns['created_by'])) {
+        if ($config['auditable'] && ! isset($currentColumns['created_by'])) {
             $changes[] = ['op' => 'ADD_AUDIT', 'col' => 'created_by'];
         }
-        if ($config['auditable'] && !isset($currentColumns['updated_by'])) {
+        if ($config['auditable'] && ! isset($currentColumns['updated_by'])) {
             $changes[] = ['op' => 'ADD_AUDIT', 'col' => 'updated_by'];
         }
-        if ($config['softDelete'] && !isset($currentColumns['deleted_at'])) {
+        if ($config['softDelete'] && ! isset($currentColumns['deleted_at'])) {
             $changes[] = ['op' => 'ADD_SOFT_DELETE'];
         }
 
         foreach ($config['belongsTo'] as $relName => $relAttr) {
-            $foreignCol = $relAttr->foreignKey ?: $relName . '_id';
-            if (!isset($currentColumns[$foreignCol])) {
+            $foreignCol = $relAttr->foreignKey ?: $relName.'_id';
+            if (! isset($currentColumns[$foreignCol])) {
                 $changes[] = ['op' => 'ADD_FK', 'col' => $foreignCol];
             }
         }
 
         foreach ($config['morphTo'] as $relName => $relAttr) {
             $morphName = $relAttr->name ?: $relName;
-            $idCol     = "{$morphName}_id";
-            $typeCol   = "{$morphName}_type";
+            $idCol = "{$morphName}_id";
+            $typeCol = "{$morphName}_type";
 
-            if (!isset($currentColumns[$idCol])) {
+            if (! isset($currentColumns[$idCol])) {
                 $changes[] = ['op' => 'ADD_MORPH', 'col' => $morphName];
             }
         }
@@ -181,7 +190,9 @@ class CoreMigrateCommand extends Command
             $this->line("  {$marker} {$tableName}.{$change['col']}  ({$change['op']})");
         }
 
-        if ($isDryRun) return;
+        if ($isDryRun) {
+            return;
+        }
 
         Schema::table($tableName, function (Blueprint $table) use ($changes) {
             foreach ($changes as $change) {
@@ -210,24 +221,28 @@ class CoreMigrateCommand extends Command
         foreach ($entities as $config) {
             foreach ($config['manyToMany'] as $relName => $relAttr) {
                 $relatedConf = $this->registry->findEntityByClass($relAttr->relatedEntity);
-                if (!$relatedConf) continue;
-
-                $pivotTable = $relAttr->pivotTable;
-                if (!$pivotTable) {
-                    $names = [$config['table'], $relatedConf['table']];
-                    sort($names);
-                    $pivotTable = \Illuminate\Support\Str::singular($names[0]) . '_' . \Illuminate\Support\Str::singular($names[1]);
+                if (! $relatedConf) {
+                    continue;
                 }
 
-                if (in_array($pivotTable, $processedPivots)) continue;
+                $pivotTable = $relAttr->pivotTable;
+                if (! $pivotTable) {
+                    $names = [$config['table'], $relatedConf['table']];
+                    sort($names);
+                    $pivotTable = Str::singular($names[0]).'_'.Str::singular($names[1]);
+                }
+
+                if (in_array($pivotTable, $processedPivots)) {
+                    continue;
+                }
                 $processedPivots[] = $pivotTable;
 
-                if (!Schema::hasTable($pivotTable)) {
+                if (! Schema::hasTable($pivotTable)) {
                     $this->info("  <fg=green>[CREATE PIVOT]</> {$pivotTable} (for {$config['class']} <-> {$relatedConf['class']})");
-                    if (!$isDryRun) {
-                        $fk1 = $relAttr->foreignPivotKey ?: \Illuminate\Support\Str::singular($config['table']) . '_id';
-                        $fk2 = $relAttr->relatedPivotKey ?: \Illuminate\Support\Str::singular($relatedConf['table']) . '_id';
-                        
+                    if (! $isDryRun) {
+                        $fk1 = $relAttr->foreignPivotKey ?: Str::singular($config['table']).'_id';
+                        $fk2 = $relAttr->relatedPivotKey ?: Str::singular($relatedConf['table']).'_id';
+
                         Schema::create($pivotTable, function (Blueprint $table) use ($fk1, $fk2) {
                             $table->foreignId($fk1);
                             $table->foreignId($fk2);
@@ -241,15 +256,21 @@ class CoreMigrateCommand extends Command
 
     protected function addColumn(Blueprint $table, string $colName, $colAttr, bool $change = false): void
     {
-        $type     = $colAttr->type ?? 'string';
-        $length   = $colAttr->length;
+        $type = $colAttr->type ?? 'string';
+        $length = $colAttr->length;
         $nullable = $colAttr->nullable ?? false;
-        $default  = $colAttr->default;
+        $default = $colAttr->default;
 
         $column = $table->$type($colName, $length);
-        if ($nullable)          $column->nullable();
-        if ($default !== null)  $column->default($default);
-        if ($change)            $column->change();
+        if ($nullable) {
+            $column->nullable();
+        }
+        if ($default !== null) {
+            $column->default($default);
+        }
+        if ($change) {
+            $column->change();
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -258,7 +279,7 @@ class CoreMigrateCommand extends Command
 
     protected function ensureMigrationTable(): void
     {
-        if (!Schema::hasTable('boundly_migrations')) {
+        if (! Schema::hasTable('boundly_migrations')) {
             Schema::create('boundly_migrations', function (Blueprint $table) {
                 $table->id();
                 $table->string('table_name')->index();
@@ -292,17 +313,18 @@ class CoreMigrateCommand extends Command
     protected function buildFingerprint(array $config): string
     {
         $data = [
-            'columns'    => array_map(fn($c) => (array) $c, $config['columns']),
-            'belongsTo'  => array_map(fn($r) => (array) $r, $config['belongsTo']),
-            'hasMany'    => array_map(fn($r) => (array) $r, $config['hasMany']),
-            'hasOne'     => array_map(fn($r) => (array) $r, $config['hasOne']),
-            'manyToMany' => array_map(fn($r) => (array) $r, $config['manyToMany'] ?? []),
-            'morphTo'    => array_map(fn($r) => (array) $r, $config['morphTo'] ?? []),
-            'morphMany'  => array_map(fn($r) => (array) $r, $config['morphMany'] ?? []),
-            'morphOne'   => array_map(fn($r) => (array) $r, $config['morphOne'] ?? []),
-            'auditable'  => $config['auditable'],
+            'columns' => array_map(fn ($c) => (array) $c, $config['columns']),
+            'belongsTo' => array_map(fn ($r) => (array) $r, $config['belongsTo']),
+            'hasMany' => array_map(fn ($r) => (array) $r, $config['hasMany']),
+            'hasOne' => array_map(fn ($r) => (array) $r, $config['hasOne']),
+            'manyToMany' => array_map(fn ($r) => (array) $r, $config['manyToMany'] ?? []),
+            'morphTo' => array_map(fn ($r) => (array) $r, $config['morphTo'] ?? []),
+            'morphMany' => array_map(fn ($r) => (array) $r, $config['morphMany'] ?? []),
+            'morphOne' => array_map(fn ($r) => (array) $r, $config['morphOne'] ?? []),
+            'auditable' => $config['auditable'],
             'softDelete' => $config['softDelete'],
         ];
+
         return md5(serialize($data));
     }
 }

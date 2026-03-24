@@ -10,29 +10,30 @@ class CoreMakeEntityCommand extends Command
     protected $signature = 'core:make:entity {name : The name of the Entity (Singular, e.g. Product)}
                                             {--a|auditable : Add the Auditable trait}
                                             {--s|soft-delete : Add the SoftDelete trait}';
-    
+
     protected $description = 'Scaffolds a new Pure DDD Entity with BOUNDLY configuration';
 
     public function handle()
     {
         $name = trim($this->argument('name'));
-        
+
         // Intelligent naming conventions
         $singularName = Str::studly(Str::singular($name));
-        $pluralName   = Str::studly(Str::plural($name));
-        $tableName    = Str::snake($pluralName);
+        $pluralName = Str::studly(Str::plural($name));
+        $tableName = Str::snake($pluralName);
         $resourceName = Str::snake($pluralName, '-');
 
         $namespace = "Domain\\{$pluralName}\\Entities";
         $directory = base_path("Domain/{$pluralName}/Entities");
-        $filePath  = $directory . DIRECTORY_SEPARATOR . $singularName . '.php';
+        $filePath = $directory.DIRECTORY_SEPARATOR.$singularName.'.php';
 
         if (file_exists($filePath)) {
             $this->error("Entity '{$singularName}' already exists at {$filePath}");
+
             return;
         }
 
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
 
@@ -43,17 +44,17 @@ class CoreMakeEntityCommand extends Command
         $classAttributes = [];
 
         if ($this->option('auditable')) {
-            $useStatements[]   = "use Infrastructure\FrameworkCore\Attributes\Behavior\Auditable;";
-            $classAttributes[] = "#[Auditable]";
+            $useStatements[] = "use Infrastructure\FrameworkCore\Attributes\Behavior\Auditable;";
+            $classAttributes[] = '#[Auditable]';
         }
 
         if ($this->option('soft-delete')) {
-            $useStatements[]   = "use Infrastructure\FrameworkCore\Attributes\Behavior\SoftDelete;";
-            $classAttributes[] = "#[SoftDelete]";
+            $useStatements[] = "use Infrastructure\FrameworkCore\Attributes\Behavior\SoftDelete;";
+            $classAttributes[] = '#[SoftDelete]';
         }
 
-        $useString  = empty($useStatements) ? "" : implode("\n", $useStatements) . "\n";
-        $attrString = empty($classAttributes) ? "" : implode("\n", $classAttributes) . "\n";
+        $useString = empty($useStatements) ? '' : implode("\n", $useStatements)."\n";
+        $attrString = empty($classAttributes) ? '' : implode("\n", $classAttributes)."\n";
 
         $content = str_replace(
             ['{{NAMESPACE}}', '{{CLASS}}', '{{TABLE}}', '{{RESOURCE}}', '{{USE_TRAITS}}', '{{CLASS_ATTRIBUTES}}'],
@@ -62,9 +63,9 @@ class CoreMakeEntityCommand extends Command
         );
 
         file_put_contents($filePath, ltrim($content));
-        
-        $this->info("✨ DDD Entity scaffolded successfully.");
-        $this->line("  <fg=green>[CREATED]</> " . str_replace(base_path() . DIRECTORY_SEPARATOR, '', $filePath));
+
+        $this->info('✨ DDD Entity scaffolded successfully.');
+        $this->line('  <fg=green>[CREATED]</> '.str_replace(base_path().DIRECTORY_SEPARATOR, '', $filePath));
         $this->line("\n  <fg=gray>Run</> <fg=yellow>php artisan core:watch</> <fg=gray>and add properties to magically evolve your database.</>");
     }
 

@@ -16,7 +16,6 @@ use Attribute;
  * #[Column(type: 'string')]
  * private string $password;
  * ```
- *
  * @example Class-level usage:
  * ```php
  * #[Hidden(fields: ['password', 'api_token'])]

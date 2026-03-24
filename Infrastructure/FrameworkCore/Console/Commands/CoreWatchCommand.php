@@ -3,12 +3,13 @@
 namespace Infrastructure\FrameworkCore\Console\Commands;
 
 use Illuminate\Console\Command;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\Process;
 
 class CoreWatchCommand extends Command
 {
     protected $signature = 'core:watch {--lang=en}';
+
     protected $description = 'Starts the development server and automatically synchronizes the database on entity changes.';
 
     public function handle()
@@ -20,7 +21,7 @@ class CoreWatchCommand extends Command
         $this->info(__('core::messages.watcher_started'));
 
         // Start Laravel Development Server using the absolute PHP path for reliability
-        $phpFinder = new PhpExecutableFinder();
+        $phpFinder = new PhpExecutableFinder;
         $phpPath = $phpFinder->find() ?: 'php';
         $process = new Process([$phpPath, 'artisan', 'serve', '--port=8000']);
         $process->start();
@@ -55,17 +56,17 @@ class CoreWatchCommand extends Command
                 $this->newLine();
                 $this->info(__('core::messages.file_changed'));
                 $this->info('⏳ Waiting for changes to settle...');
-                
+
                 // Debouncing (Wait 1s for file writes to finish)
                 sleep(1);
 
                 $this->info('🚀 Auto-syncing database metadata...');
 
                 // IMPORTANT: Use a new process to avoid PHP class caching
-                $phpFinder = new PhpExecutableFinder();
+                $phpFinder = new PhpExecutableFinder;
                 $phpPath = $phpFinder->find();
 
-                $syncProcess = new Process([$phpPath, 'artisan', 'core:migrate', '--lang=' . $lang]);
+                $syncProcess = new Process([$phpPath, 'artisan', 'core:migrate', '--lang='.$lang]);
                 $syncProcess->run();
 
                 if ($syncProcess->isSuccessful()) {
@@ -87,7 +88,7 @@ class CoreWatchCommand extends Command
      */
     protected function getDirectoryHash(string $directory): string
     {
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             return md5('');
         }
 
@@ -99,12 +100,12 @@ class CoreWatchCommand extends Command
         foreach ($iterator as $file) {
             if ($file->isFile() && $file->getExtension() === 'php') {
                 // Use path + modification time for fast and reliable change detection
-                $hashes[] = $file->getPathname() . ':' . $file->getMTime();
+                $hashes[] = $file->getPathname().':'.$file->getMTime();
             }
         }
 
         sort($hashes);
+
         return md5(implode('|', $hashes));
     }
 }
-

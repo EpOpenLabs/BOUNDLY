@@ -2,8 +2,8 @@
 
 namespace Tests\FrameworkCore\Unit;
 
-use PHPUnit\Framework\TestCase;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
+use PHPUnit\Framework\TestCase;
 
 class EntityValidatorTest extends TestCase
 {
@@ -12,7 +12,7 @@ class EntityValidatorTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->registry = new EntityRegistry();
+        $this->registry = new EntityRegistry;
     }
 
     public function test_registry_is_instantiable(): void

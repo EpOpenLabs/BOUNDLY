@@ -3,13 +3,12 @@
 namespace Infrastructure\FrameworkCore\Dispatchers;
 
 use Illuminate\Http\Request;
-use Infrastructure\FrameworkCore\Registry\ActionRegistry;
-
-use ReflectionClass;
 use Illuminate\Support\Facades\Validator;
-use Infrastructure\FrameworkCore\Attributes\Validation\Required;
 use Infrastructure\FrameworkCore\Attributes\Validation\Email;
 use Infrastructure\FrameworkCore\Attributes\Validation\Min;
+use Infrastructure\FrameworkCore\Attributes\Validation\Required;
+use Infrastructure\FrameworkCore\Registry\ActionRegistry;
+use ReflectionClass;
 
 class ActionDispatcher
 {
@@ -26,24 +25,24 @@ class ActionDispatcher
 
         if ($actionClass) {
             $action = app()->make($actionClass);
-            
+
             // Reflexión para construir los parámetros automáticamente (DTOs)
             $methodReflection = new \ReflectionMethod($actionClass, 'execute');
             $args = [];
-            
+
             foreach ($methodReflection->getParameters() as $param) {
                 $type = $param->getType();
-                if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
+                if ($type instanceof \ReflectionNamedType && ! $type->isBuiltin()) {
                     $className = $type->getName();
                     if ($className === Request::class) {
                         $args[] = $request;
                     } elseif (method_exists($className, 'fromArray')) {
                         // AQUÍ DESACOPLAMOS LARAVEL CREANDO EL DTO AUTOMÁTICAMENTE
                         $dto = $className::fromArray($request->all());
-                        
+
                         // VALIDACIÓN AUTOMÁTICA POR ATRIBUTOS
                         $this->validateDto($dto);
-                        
+
                         $args[] = $dto;
                     } else {
                         $args[] = app()->make($className);
@@ -69,26 +68,26 @@ class ActionDispatcher
             $propName = $property->getName();
             $propRules = [];
 
-            if (!empty($property->getAttributes(Required::class))) {
+            if (! empty($property->getAttributes(Required::class))) {
                 $propRules[] = 'required';
             }
-            if (!empty($property->getAttributes(Email::class))) {
+            if (! empty($property->getAttributes(Email::class))) {
                 $propRules[] = 'email';
             }
             $minAttr = $property->getAttributes(Min::class);
-            if (!empty($minAttr)) {
-                $propRules[] = 'min:' . $minAttr[0]->newInstance()->value;
+            if (! empty($minAttr)) {
+                $propRules[] = 'min:'.$minAttr[0]->newInstance()->value;
             }
 
-            if (!empty($propRules)) {
+            if (! empty($propRules)) {
                 $rules[$propName] = $propRules;
             }
         }
 
-        if (!empty($rules)) {
+        if (! empty($rules)) {
             $validator = Validator::make($data, $rules);
             if ($validator->fails()) {
-                throw new \Exception("Validación Fallida: " . implode(', ', $validator->errors()->all()), 422);
+                throw new \Exception('Validación Fallida: '.implode(', ', $validator->errors()->all()), 422);
             }
         }
     }

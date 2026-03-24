@@ -15,7 +15,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'paths' => [
-        'domain'      => base_path('Domain'),
+        'domain' => base_path('Domain'),
         'application' => base_path('Application'),
     ],
 
@@ -53,7 +53,7 @@ return [
     */
     'pagination' => [
         'default_per_page' => env('BOUNDLY_PER_PAGE', 15),
-        'max_per_page'     => env('BOUNDLY_MAX_PER_PAGE', 100),
+        'max_per_page' => env('BOUNDLY_MAX_PER_PAGE', 100),
     ],
 
     /*
@@ -64,9 +64,9 @@ return [
     | Can be overridden per-entity using #[RateLimit] attribute.
     */
     'rate_limit' => [
-        'enabled'       => env('BOUNDLY_RATE_LIMIT_ENABLED', true),
-        'max_attempts'  => env('BOUNDLY_RATE_LIMIT_MAX_ATTEMPTS', 60),
+        'enabled' => env('BOUNDLY_RATE_LIMIT_ENABLED', true),
+        'max_attempts' => env('BOUNDLY_RATE_LIMIT_MAX_ATTEMPTS', 60),
         'decay_minutes' => env('BOUNDLY_RATE_LIMIT_DECAY_MINUTES', 1),
-        'prefix'        => env('BOUNDLY_RATE_LIMIT_PREFIX', 'api'),
+        'prefix' => env('BOUNDLY_RATE_LIMIT_PREFIX', 'api'),
     ],
 ];

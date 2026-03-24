@@ -2,7 +2,10 @@
 
 namespace Infrastructure\Providers;
 
+use Domain\Users\Events\UserCreated;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use Infrastructure\Listeners\WelcomeNewUser;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,9 +19,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        \Illuminate\Support\Facades\Event::listen(
-            \Domain\Users\Events\UserCreated::class,
-            \Infrastructure\Listeners\WelcomeNewUser::class
+        Event::listen(
+            UserCreated::class,
+            WelcomeNewUser::class
         );
     }
 }

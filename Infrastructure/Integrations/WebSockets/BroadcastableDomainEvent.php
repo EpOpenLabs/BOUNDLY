@@ -2,8 +2,8 @@
 
 namespace Infrastructure\Integrations\WebSockets;
 
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Domain\Shared\Events\ShouldBroadcastToExterior;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 class BroadcastableDomainEvent implements ShouldBroadcast
 {

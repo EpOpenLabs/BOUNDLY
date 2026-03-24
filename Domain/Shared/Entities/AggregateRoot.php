@@ -1,4 +1,5 @@
 <?php
+
 namespace Domain\Shared\Entities;
 
 use Domain\Shared\Events\DomainEvent;
@@ -16,6 +17,7 @@ trait AggregateRoot
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];
+
         return $events;
     }
 }

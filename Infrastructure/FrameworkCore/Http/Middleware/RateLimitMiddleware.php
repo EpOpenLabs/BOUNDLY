@@ -3,9 +3,10 @@
 namespace Infrastructure\FrameworkCore\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
 use Illuminate\Cache\RateLimiter;
+use Illuminate\Http\Request;
 use Infrastructure\FrameworkCore\Attributes\Behavior\RateLimit;
+use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Symfony\Component\HttpFoundation\Response;
 
 class RateLimitMiddleware
@@ -16,16 +17,16 @@ class RateLimitMiddleware
 
     public function handle(Request $request, Closure $next): Response
     {
-        $config = app(\Infrastructure\FrameworkCore\Registry\EntityRegistry::class)
+        $config = app(EntityRegistry::class)
             ->getEntityConfig($request->route('resource'));
 
-        if (!$config) {
+        if (! $config) {
             return $next($request);
         }
 
         $rateLimitConfig = config('boundly.rate_limit', []);
 
-        if (!($rateLimitConfig['enabled'] ?? true)) {
+        if (! ($rateLimitConfig['enabled'] ?? true)) {
             return $next($request);
         }
 
@@ -67,17 +68,17 @@ class RateLimitMiddleware
     {
         $resource = $request->route('resource') ?? 'global';
         $id = $request->route('id');
-        
+
         if ($id) {
-            return $prefix . '|' . $resource . '|' . $id . '|' . $request->ip();
+            return $prefix.'|'.$resource.'|'.$id.'|'.$request->ip();
         }
 
         $user = $request->user();
         if ($user) {
-            return $prefix . '|' . $resource . '|' . $user->getAuthIdentifier();
+            return $prefix.'|'.$resource.'|'.$user->getAuthIdentifier();
         }
 
-        return $prefix . '|' . $resource . '|' . $request->ip();
+        return $prefix.'|'.$resource.'|'.$request->ip();
     }
 
     protected function tooManyAttempts(string $key, int $maxAttempts): bool

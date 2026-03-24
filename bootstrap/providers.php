@@ -1,10 +1,11 @@
 <?php
 
-use Infrastructure\Providers\AppServiceProvider;
 use Infrastructure\FrameworkCore\Providers\FrameworkCoreServiceProvider;
+use Infrastructure\Providers\AppServiceProvider;
+use Infrastructure\Providers\BroadcastServiceProvider;
 
 return [
     AppServiceProvider::class,
     FrameworkCoreServiceProvider::class,
-    \Infrastructure\Providers\BroadcastServiceProvider::class,
+    BroadcastServiceProvider::class,
 ];

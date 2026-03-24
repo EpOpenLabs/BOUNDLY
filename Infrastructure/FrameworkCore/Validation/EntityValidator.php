@@ -2,8 +2,10 @@
 
 namespace Infrastructure\FrameworkCore\Validation;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Infrastructure\FrameworkCore\Traits\ChecksPermissions;
 
 /**
@@ -15,19 +17,20 @@ class EntityValidator
 {
     use ChecksPermissions;
 
-    public function __construct(protected \Infrastructure\FrameworkCore\Registry\EntityRegistry $registry) {}
+    public function __construct(protected EntityRegistry $registry) {}
+
     /**
      * Validate $data against the entity's column configuration.
      *
-     * @param array $data    The incoming request payload.
-     * @param array $config  The entity config from EntityRegistry.
-     * @param bool  $partial If true, skip 'required' for fields absent in $data (useful for PATCH).
+     * @param  array  $data  The incoming request payload.
+     * @param  array  $config  The entity config from EntityRegistry.
+     * @param  bool  $partial  If true, skip 'required' for fields absent in $data (useful for PATCH).
      *
      * @throws ValidationException
      */
     public function validate(array $data, array $config, bool $partial = false): array
     {
-        $rules    = [];
+        $rules = [];
         $messages = [];
 
         foreach ($config['columns'] as $colName => $colAttr) {
@@ -39,9 +42,9 @@ class EntityValidator
             $fieldRules = [];
 
             // --- Required vs Optional ---
-            if (!$colAttr->nullable && $colAttr->default === null) {
+            if (! $colAttr->nullable && $colAttr->default === null) {
                 // Only mark as required if we are NOT doing a partial (PATCH) update
-                if (!$partial || array_key_exists($colName, $data)) {
+                if (! $partial || array_key_exists($colName, $data)) {
                     $fieldRules[] = 'required';
                 }
             } else {
@@ -51,13 +54,13 @@ class EntityValidator
             // --- Type Mapping ---
             $fieldRules[] = match ($colAttr->type) {
                 'integer', 'bigInteger', 'tinyInteger', 'smallInteger', 'unsignedBigInteger' => 'integer',
-                'float', 'double', 'decimal'                                                 => 'numeric',
-                'boolean'                                                                    => 'boolean',
-                'date'                                                                       => 'date',
-                'datetime', 'timestamp'                                                      => 'date_format:Y-m-d H:i:s',
-                'json'                                                                       => 'json',
-                'email'                                                                      => 'email',
-                default                                                                      => 'string',
+                'float', 'double', 'decimal' => 'numeric',
+                'boolean' => 'boolean',
+                'date' => 'date',
+                'datetime', 'timestamp' => 'date_format:Y-m-d H:i:s',
+                'json' => 'json',
+                'email' => 'email',
+                default => 'string',
             };
 
             // --- Max Length (only for string types) ---
@@ -78,9 +81,9 @@ class EntityValidator
         // --- Validate MorphTo relationships ---
         foreach ($config['morphTo'] ?? [] as $relName => $relAttr) {
             $morphName = $relAttr->name ?: $relName;
-            $rules["{$morphName}_id"]   = ['required_with:' . $morphName . '_type'];
-            $rules["{$morphName}_type"] = ['required_with:' . $morphName . '_id', 'string', function ($attribute, $value, $fail) {
-                if ($this->registry->getClassByMorph($value) === $value && !$this->registry->findEntityByClass($value)) {
+            $rules["{$morphName}_id"] = ['required_with:'.$morphName.'_type'];
+            $rules["{$morphName}_type"] = ['required_with:'.$morphName.'_id', 'string', function ($attribute, $value, $fail) {
+                if ($this->registry->getClassByMorph($value) === $value && ! $this->registry->findEntityByClass($value)) {
                     $fail("The type '{$value}' is not a valid registered entity or morph alias.");
                 }
             }];
@@ -109,8 +112,8 @@ class EntityValidator
      */
     public function sanitize(array $data, array $config): array
     {
-        /** @var \Illuminate\Contracts\Auth\Authenticatable|null $user */
-        $user        = auth()->guard()->user();
+        /** @var Authenticatable|null $user */
+        $user = auth()->guard()->user();
         $allowedKeys = [];
 
         // 1. Column-level permissions
@@ -122,7 +125,7 @@ class EntityValidator
 
         // Also allow BelongsTo FK keys (e.g., 'user_id')
         foreach ($config['belongsTo'] as $relName => $relAttr) {
-            $allowedKeys[] = $relAttr->foreignKey ?: $relName . '_id';
+            $allowedKeys[] = $relAttr->foreignKey ?: $relName.'_id';
         }
 
         // Also allow ManyToMany array keys (e.g., 'roles')

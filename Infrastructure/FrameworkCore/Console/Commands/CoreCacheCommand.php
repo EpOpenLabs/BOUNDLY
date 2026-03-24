@@ -4,8 +4,8 @@ namespace Infrastructure\FrameworkCore\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 use Infrastructure\FrameworkCore\Registry\ActionRegistry;
+use Infrastructure\FrameworkCore\Registry\EntityRegistry;
 
 /**
  * Caches the entity/action registry map to a static PHP file.
@@ -17,7 +17,8 @@ use Infrastructure\FrameworkCore\Registry\ActionRegistry;
  */
 class CoreCacheCommand extends Command
 {
-    protected $signature   = 'core:cache {--clear : Clear the metadata cache}';
+    protected $signature = 'core:cache {--clear : Clear the metadata cache}';
+
     protected $description = 'Cache the BOUNDLY metadata registry for high-performance production use.';
 
     public function __construct(
@@ -38,6 +39,7 @@ class CoreCacheCommand extends Command
             } else {
                 $this->warn('No cache file found.');
             }
+
             return;
         }
 
@@ -46,12 +48,12 @@ class CoreCacheCommand extends Command
         // The registries have already been populated during boot.
         // We just serialize the final map to disk.
         $entities = $this->entityRegistry->getAllEntities();
-        $actions  = $this->actionRegistry->getAllActions();
+        $actions = $this->actionRegistry->getAllActions();
 
         // Serialize to a plain PHP array (fast require, no JSON parsing)
         $export = var_export([
             'entities' => $entities,
-            'actions'  => $actions,
+            'actions' => $actions,
             'built_at' => now()->toISOString(),
         ], true);
 
@@ -60,10 +62,10 @@ class CoreCacheCommand extends Command
         File::ensureDirectoryExists(dirname($cachePath));
         File::put($cachePath, $content);
 
-        $this->info("✅ BOUNDLY metadata cached successfully.");
+        $this->info('✅ BOUNDLY metadata cached successfully.');
         $this->line("   Path    : {$cachePath}");
-        $this->line("   Entities: " . count($entities));
-        $this->line("   Actions : " . count($actions));
+        $this->line('   Entities: '.count($entities));
+        $this->line('   Actions : '.count($actions));
         $this->newLine();
         $this->warn('⚠  Run `php artisan core:cache --clear` after any Domain/Application changes.');
     }

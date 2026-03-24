@@ -2,9 +2,9 @@
 
 namespace Infrastructure\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Event;
 use Domain\Shared\Events\ShouldBroadcastToExterior;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\ServiceProvider;
 use Infrastructure\Integrations\WebSockets\BroadcastableDomainEvent;
 
 class BroadcastServiceProvider extends ServiceProvider

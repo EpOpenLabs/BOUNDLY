@@ -1,4 +1,5 @@
 <?php
+
 return [
     'scanning_entities' => 'Escaneando entidades y sincronizando base de datos...',
     'no_entities_found' => 'No se detectaron entidades registradas.',

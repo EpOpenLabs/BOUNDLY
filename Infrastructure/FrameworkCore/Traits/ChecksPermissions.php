@@ -17,7 +17,7 @@ trait ChecksPermissions
             return true;
         }
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -32,7 +32,7 @@ trait ChecksPermissions
         }
 
         if (isset($user->roles) && is_array($user->roles)) {
-            return !empty(array_intersect($user->roles, $roles));
+            return ! empty(array_intersect($user->roles, $roles));
         }
 
         return false;

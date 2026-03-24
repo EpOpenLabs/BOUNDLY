@@ -2,8 +2,8 @@
 
 namespace Infrastructure\FrameworkCore\Registry;
 
-use ReflectionClass;
 use Infrastructure\FrameworkCore\Attributes\UseCase\Action;
+use ReflectionClass;
 
 class ActionRegistry
 {
@@ -11,7 +11,7 @@ class ActionRegistry
 
     public function registerClass(string $className): void
     {
-        if (!class_exists($className)) {
+        if (! class_exists($className)) {
             return;
         }
 
@@ -23,14 +23,15 @@ class ActionRegistry
         }
 
         $actionConfig = $attributes[0]->newInstance();
-        $key = strtoupper($actionConfig->method) . '_' . $actionConfig->resource;
-        
+        $key = strtoupper($actionConfig->method).'_'.$actionConfig->resource;
+
         $this->actions[$key] = $className;
     }
 
     public function getActionClass(string $resource, string $method): ?string
     {
-        $key = strtoupper($method) . '_' . $resource;
+        $key = strtoupper($method).'_'.$resource;
+
         return $this->actions[$key] ?? null;
     }
 
@@ -43,11 +44,12 @@ class ActionRegistry
     {
         $found = [];
         foreach ($this->actions as $key => $className) {
-            if (str_ends_with($key, '_' . $resource)) {
+            if (str_ends_with($key, '_'.$resource)) {
                 $method = explode('_', $key)[0];
                 $found[$method] = $className;
             }
         }
+
         return $found;
     }
 
@@ -60,4 +62,3 @@ class ActionRegistry
         $this->actions = $actions;
     }
 }
-

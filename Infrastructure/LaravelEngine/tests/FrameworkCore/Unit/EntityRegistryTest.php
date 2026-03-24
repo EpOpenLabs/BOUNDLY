@@ -2,8 +2,8 @@
 
 namespace Tests\FrameworkCore\Unit;
 
-use PHPUnit\Framework\TestCase;
 use Infrastructure\FrameworkCore\Registry\EntityRegistry;
+use PHPUnit\Framework\TestCase;
 
 class EntityRegistryTest extends TestCase
 {
@@ -12,13 +12,13 @@ class EntityRegistryTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->registry = new EntityRegistry();
+        $this->registry = new EntityRegistry;
     }
 
     public function test_register_class_ignores_non_entity_classes(): void
     {
         $this->registry->registerClass('Some\\Non\\Entity\\Class');
-        
+
         $entities = $this->registry->getAllEntities();
         $this->assertEmpty($entities);
     }
@@ -26,35 +26,35 @@ class EntityRegistryTest extends TestCase
     public function test_get_entity_config_returns_null_for_undefined(): void
     {
         $config = $this->registry->getEntityConfig('undefined');
-        
+
         $this->assertNull($config);
     }
 
     public function test_get_class_by_morph_returns_input_when_not_found(): void
     {
         $result = $this->registry->getClassByMorph('unknown_alias');
-        
+
         $this->assertEquals('unknown_alias', $result);
     }
 
     public function test_get_morph_by_class_returns_input_when_not_found(): void
     {
         $result = $this->registry->getMorphByClass('Unknown\\Class\\Name');
-        
+
         $this->assertEquals('Unknown\\Class\\Name', $result);
     }
 
     public function test_find_entity_by_table_returns_null_when_not_found(): void
     {
         $result = $this->registry->findEntityByTable('non_existent_table');
-        
+
         $this->assertNull($result);
     }
 
     public function test_find_entity_by_class_returns_null_when_not_found(): void
     {
         $result = $this->registry->findEntityByClass('Non\\Existent\\Class');
-        
+
         $this->assertNull($result);
     }
 
@@ -94,14 +94,14 @@ class EntityRegistryTest extends TestCase
     public function test_get_all_entities_returns_array(): void
     {
         $entities = $this->registry->getAllEntities();
-        
+
         $this->assertIsArray($entities);
     }
 
     public function test_register_class_returns_early_for_nonexistent_class(): void
     {
         $this->registry->registerClass('Non\\Existent\\Class\\That\\Does\\Not\\Exist');
-        
+
         $this->assertEmpty($this->registry->getAllEntities());
     }
 

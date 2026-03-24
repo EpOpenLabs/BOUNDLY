@@ -3,9 +3,9 @@
 namespace Application\Users\Actions;
 
 use Application\Users\DTOs\UserDTO;
+use Illuminate\Http\Request;
 use Infrastructure\FrameworkCore\Attributes\UseCase\Action;
 use Infrastructure\FrameworkCore\Database\DynamicRepository;
-use Illuminate\Http\Request;
 
 #[Action(resource: 'users', method: 'POST')]
 class CreateUser
@@ -17,20 +17,20 @@ class CreateUser
     public function execute(Request $request): array
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:150',
-            'email'    => 'required|email|unique:users,email',
+            'name' => 'required|string|max:150',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'phone'    => 'nullable|string',
-            'address'  => 'nullable|string',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
         ]);
 
         $dto = UserDTO::fromRequest($data);
         $user = $this->repository->insert('users', $dto->toArray());
 
         return [
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'User created successfully',
-            'data'    => $user
+            'data' => $user,
         ];
     }
 }

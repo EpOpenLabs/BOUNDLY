@@ -9,5 +9,5 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 // BOUNDLY: Dynamic channels for Domain Entities
 Broadcast::channel('domain.{entity}.{id}', function ($user, $entity, $id) {
     // Here we can implement generic permissions based on the Boundly Auth registry
-    return true; 
+    return true;
 });

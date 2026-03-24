@@ -1,4 +1,5 @@
 <?php
+
 namespace Domain\Shared\Events;
 
 interface DomainEvent

@@ -33,8 +33,8 @@ use Attribute;
 class Authorize
 {
     public function __construct(
-        public array  $roles   = [],
-        public array  $methods = [],
-        public string $guard   = 'sanctum'
+        public array $roles = [],
+        public array $methods = [],
+        public string $guard = 'sanctum'
     ) {}
 }

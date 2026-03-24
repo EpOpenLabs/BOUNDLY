@@ -2,10 +2,9 @@
 
 namespace Infrastructure\FrameworkCore\Testing;
 
-use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 /**
  * The base test case for all BOUNDLY domain tests.
@@ -16,7 +15,7 @@ abstract class BoundlyTestCase extends BaseTestCase
 {
     use RefreshDatabase;
 
-    // By default Laravel tests assume standard migrations, 
+    // By default Laravel tests assume standard migrations,
     // but BOUNDLY uses declarative Entity attributes.
     // We override refreshTestDatabase so RefreshDatabase trait uses our engine.
     protected function refreshTestDatabase()
