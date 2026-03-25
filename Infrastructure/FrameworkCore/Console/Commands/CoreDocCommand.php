@@ -40,8 +40,6 @@ class CoreDocCommand extends Command
         'longText' => ['type' => 'string'],
     ];
 
-    private const DEFAULT_CRUD_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
-
     public function __construct(
         protected EntityRegistry $entityRegistry,
         protected ActionRegistry $actionRegistry
@@ -190,7 +188,7 @@ class CoreDocCommand extends Command
             ],
         ];
 
-        return array_filter($paths, fn ($v) => $v !== null);
+        return $paths;
     }
 
     private function buildResourcePaths(string $resource, string $schemaName, array $config, array $registeredActions): array
