@@ -11,11 +11,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-violet.svg)](https://opensource.org/licenses/MIT)
 [![PHP Version](https://img.shields.io/badge/PHP-8.3%2B-blue.svg)](https://www.php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13%2B-red.svg)](https://laravel.com/)
-[![Version](https://img.shields.io/badge/version-v0.9.0-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
+[![Version](https://img.shields.io/badge/version-v0.9.1-blue.svg)](https://github.com/EpOpenLabs/BOUNDLY/releases)
 [![CI](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml/badge.svg)](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%205-brightgreen.svg)](https://phpstan.org/)
 [![Tests](https://img.shields.io/badge/Tests-218%20passing-brightgreen.svg)](https://github.com/EpOpenLabs/BOUNDLY/actions/workflows/ci.yml)
-[![Packagist](https://img.shields.io/badge/Packagist-v0.9.0-violet.svg)](https://packagist.org/packages/epolabs/boundly)
+[![Packagist](https://img.shields.io/badge/Packagist-v0.9.1-violet.svg)](https://packagist.org/packages/epolabs/boundly)
 
 </div>
 

@@ -6,8 +6,9 @@ BOUNDLY is currently in **active development (Alpha)**. We recommend always usin
 
 | Version | Supported          |
 | ------- | ------------------ |
-| v0.7.x-alpha | :white_check_mark: |
+| v0.9.x-alpha | :white_check_mark: |
 | v0.8.x-alpha | :white_check_mark: |
+| v0.7.x-alpha | :white_check_mark: |
 | < v0.7.0-alpha | :x:                |
 
 ## Security Features
