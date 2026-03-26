@@ -183,7 +183,7 @@ class FrameworkCoreServiceProvider extends ServiceProvider
                 Route::any('{resource}/{id?}', [
                     GenericApiController::class,
                     'handle',
-                ]);
+                ])->where(['resource' => '^(?!auth|health)[a-z-]+$']);
             });
     }
 }

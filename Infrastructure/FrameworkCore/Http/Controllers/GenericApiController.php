@@ -158,7 +158,7 @@ class GenericApiController
     {
         $code = $e->getCode();
 
-        if ($code < 400 || $code > 599) {
+        if (! is_int($code) || $code < 400 || $code > 599) {
             $code = 500;
         }
 

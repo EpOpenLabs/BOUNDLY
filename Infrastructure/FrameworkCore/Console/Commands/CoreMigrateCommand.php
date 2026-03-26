@@ -124,8 +124,12 @@ class CoreMigrateCommand extends Command
             }
 
             if ($config['auditable']) {
-                $table->string('created_by')->nullable();
-                $table->string('updated_by')->nullable();
+                if (! isset($config['columns']['created_by'])) {
+                    $table->string('created_by')->nullable();
+                }
+                if (! isset($config['columns']['updated_by'])) {
+                    $table->string('updated_by')->nullable();
+                }
             }
             if ($config['softDelete']) {
                 $table->softDeletes();
@@ -153,11 +157,11 @@ class CoreMigrateCommand extends Command
             }
         }
 
-        // Detect missing audit/soft-delete columns
-        if ($config['auditable'] && ! isset($currentColumns['created_by'])) {
+        // Detect missing audit/soft-delete columns (only if not already defined in columns)
+        if ($config['auditable'] && ! isset($currentColumns['created_by']) && ! isset($config['columns']['created_by'])) {
             $changes[] = ['op' => 'ADD_AUDIT', 'col' => 'created_by'];
         }
-        if ($config['auditable'] && ! isset($currentColumns['updated_by'])) {
+        if ($config['auditable'] && ! isset($currentColumns['updated_by']) && ! isset($config['columns']['updated_by'])) {
             $changes[] = ['op' => 'ADD_AUDIT', 'col' => 'updated_by'];
         }
         if ($config['softDelete'] && ! isset($currentColumns['deleted_at'])) {
@@ -166,7 +170,7 @@ class CoreMigrateCommand extends Command
 
         foreach ($config['belongsTo'] as $relName => $relAttr) {
             $foreignCol = $relAttr->foreignKey ?: $relName.'_id';
-            if (! isset($currentColumns[$foreignCol])) {
+            if (! isset($currentColumns[$foreignCol]) && ! isset($config['columns'][$foreignCol])) {
                 $changes[] = ['op' => 'ADD_FK', 'col' => $foreignCol];
             }
         }
@@ -187,7 +191,8 @@ class CoreMigrateCommand extends Command
 
         foreach ($changes as $change) {
             $marker = $change['op'] === 'CHANGE' ? '<fg=yellow>[CHANGE]</>' : '<fg=cyan>[ADD]</>';
-            $this->line("  {$marker} {$tableName}.{$change['col']}  ({$change['op']})");
+            $col = $change['col'] ?? 'softDeletes';
+            $this->line("  {$marker} {$tableName}.{$col}  ({$change['op']})");
         }
 
         if ($isDryRun) {
@@ -261,7 +266,13 @@ class CoreMigrateCommand extends Command
         $nullable = $colAttr->nullable ?? false;
         $default = $colAttr->default;
 
-        $column = $table->$type($colName, $length);
+        $typeMap = [
+            'bigint' => 'bigInteger',
+            'bigintunsigned' => 'bigInteger',
+        ];
+        $method = $typeMap[strtolower($type)] ?? $type;
+
+        $column = $table->$method($colName, $length);
         if ($nullable) {
             $column->nullable();
         }
