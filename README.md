@@ -217,9 +217,10 @@ Broadcast your domain events to the frontend in real-time, completely decoupled 
 ### 1. Create a new project
 
 ```bash
-composer create-project epolabs/boundly my-project
+composer create-project epolabs/boundly boundly --stability=alpha
 cd my-project
 ```
+
 
 Or clone the repository:
 
