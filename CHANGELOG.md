@@ -14,6 +14,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.1-alpha] - 2026-03-25
+
+> 🔧 Bug fixes and improvements.
+
+### Fixed
+- **CoreMigrateCommand**: Check if audit columns (`created_by`, `updated_by`) are already defined in `columns` config before auto-adding, avoiding duplicate column errors.
+- **CoreMigrateCommand**: Fixed foreign key column detection to respect user-defined columns in config.
+- **CoreMigrateCommand**: Added `bigint` and `bigintunsigned` type mapping support in column creation.
+- **GenericApiController**: Fixed error code validation to properly handle non-integer error codes (defaults to 500).
+- **FrameworkCoreServiceProvider**: Excluded `auth` and `health` from generic route patterns to prevent conflicts.
+
+---
+
 ## [0.9.0-alpha] - 2026-03-24
 
 > 🚀 Production Readiness & Advanced Security Features.
@@ -228,7 +241,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.3.0-alpha...HEAD
+[Unreleased]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.9.1-alpha...HEAD
+[0.9.1-alpha]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.9.0-alpha...v0.9.1-alpha
 [0.3.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.2.0-alpha...v0.3.0-alpha
 [0.2.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/compare/v0.1.0-alpha...v0.2.0-alpha
 [0.1.0-alpha]: https://github.com/EpOpenLabs/BOUNDLY/releases/tag/v0.1.0-alpha
